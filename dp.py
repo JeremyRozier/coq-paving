@@ -1,5 +1,5 @@
-def has_periodic(tau):
-    """Function which determines if from
+def iterative_has_periodic(tau):
+    """Iterative function which determines if from
     a gather of tiles we can produce a periodic
     sequence of tiles ie tau solves DP."""
 
@@ -22,5 +22,29 @@ def has_periodic(tau):
     return False
 
 
-                
-                
+def recursive_has_periodic(tau, way=None, visited=None):
+    """Recursive function which determines if from
+    a gather of tiles we can produce a periodic
+    sequence of tiles ie tau solves DP."""
+
+    if way is None and visited is None:
+        way = [tau[0]]
+        visited = []
+
+    if len(way) > len(tau):
+        return False
+
+    list_bool = []
+    if len(visited) < len(tau):
+        unvisited_tiles = [tile for tile in tau if tile not in visited]
+        for unvisited_tile in unvisited_tiles:
+            visited.append(way[-1])
+            list_bool.append(recursive_has_periodic(tau, [unvisited_tile], visited))
+
+    associated_tiles = [tile for tile in tau if way[-1][1] == tile[0]]
+    for tile in associated_tiles:
+        if tile in way:
+            return True
+        list_bool.append(recursive_has_periodic(tau, way + [tile], visited))
+
+    return any(list_bool)
