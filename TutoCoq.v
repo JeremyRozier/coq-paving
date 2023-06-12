@@ -192,6 +192,19 @@ Definition curry3 : forall A B C D,
 fun A B C D H a b c =>
   H (conj a (conj b c)).
 
+Lemma curry4 : forall A B C D, ((A/\B/\C) -> D) -> A -> B -> C -> D.
+Proof.
+  intros A B C D H a b c.
+  apply H.
+  split.
+  apply a.
+  split.
+  apply b.
+  apply c.
+Qed.
+
+
+
 
 (*** Arithmétique Simple sur les Entiers ***)
 
@@ -205,9 +218,9 @@ Print nat.
 Fixpoint minus (n m:nat) : nat 
 :=
 match n,m with 
-  | _,O => n
-  | O, S b => O
-  | S a, S b => minus  a b
+  | _,0 => n
+  | 0, S b => 0
+  | S a, S b => minus a b
 end.
 
 Print minus.
@@ -235,9 +248,6 @@ Qed.
     Il vous faudra alors, comme en maths, prouver le cas "n=0" puis le cas "S n" en supposant la propriété vraie
 pour n *)
 
-Inductive bli : Type :=
-A : bli | B : bli.
-Print bla.
 (* Formellement, le principe d'induction est résumé par la formule suivante en Coq : *)
 Check nat_ind.
 
@@ -294,11 +304,11 @@ Definition leq':=fun n m => n-m = 0.
 (** Comme vous le savez sûrement déjà, un ordre est une relation réflexive,
  anti-symétrique et transitive. Définissez ici ces différentes notions. *)
 
-Definition reflexive (R:relation):= [...].
+Definition reflexive (R:relation):= forall n : X, R n n.
 
-Definition antisymmetric (R:relation):= [...].
+Definition antisymmetric (R:relation):= forall n m : X, R n m -> ~(R m n).
 
-Definition transitive (R:relation):=[...].
+Definition transitive (R:relation):=forall n m p : X, (R n m) /\ (R m p) -> R n p.
 
 Definition order (R:relation):= reflexive R /\ antisymmetric R /\ transitive R.
 
@@ -317,32 +327,13 @@ hypothèses du contexte en utilisant:
 "retournée") définit lui-même un ordre. 
 Définissez ici ce qu'est le retournée d'une relation. *)
 
-Definition reverse (R:relation):=[...].
+Definition reverse (R:relation):=  forall n m, X -> X -> ~R n m.
 Check reverse.
 
 (** On peut maintenant montrer que si une relation est 
 (réflexive|anti-symétrique|transitive) sa relation inverse l'est aussi. *)
 
-Lemma rev_refl (R:relation): reflexive R -> reflexive (reverse R).
-  [...]
-Qed.
 
-Lemma rev_antisym (R:relation): antisymmetric R -> antisymmetric (reverse R).
-  [...]
-Qed.
-
-
-Lemma rev_trans (R:relation): transitive R -> transitive (reverse R).
-  [...]  
-Qed.
-
-
-(** On peut maintenant facilement montrer qu'un ordre inversé est 
-lui-même un ordre. *)
-
-Lemma rev_order (R:relation):  order R -> order (reverse R).
-  [...]  
-Qed.
 
 
 
@@ -366,7 +357,7 @@ Parameter A : Set.
 en utilisant la fonction "++" qui permet de concatener deux listes, 
 puis prouvez que c'est une involution, en s'aidant de ces lemmes intermédiaires. *)
 
-Fixpoint rev l : list A := [...]
+Fixpoint rev l : list A := .
 (* Encore une fois, on peut utiliser le principe d'induction sur les listes [induction l] *)
 Check list_ind.
 

@@ -48,3 +48,49 @@ def recursive_has_periodic(tau, way=None, visited=None):
         list_bool.append(recursive_has_periodic(tau, way + [tile], visited))
 
     return any(list_bool)
+
+
+def recursive_has_periodic2(tau, way=None, unvisited=None):
+    """Recursive function (more adapted to coq) which determines if from
+    a gather of tiles we can produce a periodic
+    sequence of tiles ie tau solves DP."""
+
+    def get_associated_tiles(tau, tile, list_associated_tiles=None):
+        if list_associated_tiles is None:
+            list_associated_tiles = []
+        if len(tau) == 0:
+            return list_associated_tiles
+        if tile[1] == tau[-1][0]:
+            to_add = [tau[-1]]
+        else:
+            to_add = []
+
+        return get_associated_tiles(tau[:-1], tile, list_associated_tiles + to_add)
+
+    def run_associated_tiles(list_associated_tiles):
+        if len(list_associated_tiles) == 0:
+            if len(unvisited) == 0:
+                return False
+            tile = unvisited.pop(-1)
+            list_bool.append(recursive_has_periodic2(tau, [tile], unvisited))
+            return False
+        if list_associated_tiles[-1] in way:
+            return True
+
+        list_bool.append(
+            recursive_has_periodic2(tau, way + [list_associated_tiles[-1]], unvisited)
+        )
+        list_bool.append(run_associated_tiles(list_associated_tiles[:-1]))
+
+    if unvisited is None and way is None:
+        unvisited = tau[:]
+        way = [unvisited.pop(-1)]
+
+    if len(way) > len(tau):
+        return False
+
+    list_bool = []
+    tile = way[-1]
+    list_associated_tiles = get_associated_tiles(tau, tile)
+    list_bool.append(run_associated_tiles(list_associated_tiles))
+    return any(list_bool)
