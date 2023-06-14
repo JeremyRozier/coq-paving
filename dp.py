@@ -85,11 +85,11 @@ def recursive_has_periodic2(tau, way=None, unvisited=None):
         if list_associated_tiles[-1] in way:
             return list_bool + [True]
 
-        list_bool += [
+        list_bool.append(
             recursive_has_periodic2(tau, way + [list_associated_tiles[-1]], unvisited)
-        ]
+        )
 
-        list_bool += run_associated_tiles(list_associated_tiles[:-1])
+        list_bool.extend(run_associated_tiles(list_associated_tiles[:-1]))
 
         return list_bool
 
