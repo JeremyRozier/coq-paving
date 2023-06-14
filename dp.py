@@ -56,10 +56,13 @@ def recursive_has_periodic2(tau, way=None, unvisited=None):
     sequence of tiles ie tau solves DP."""
 
     def get_associated_tiles(tau, tile, list_associated_tiles=None):
+
         if list_associated_tiles is None:
             list_associated_tiles = []
+
         if len(tau) == 0:
             return list_associated_tiles
+
         if tile[1] == tau[-1][0]:
             to_add = [tau[-1]]
         else:
@@ -67,20 +70,28 @@ def recursive_has_periodic2(tau, way=None, unvisited=None):
 
         return get_associated_tiles(tau[:-1], tile, list_associated_tiles + to_add)
 
-    def run_associated_tiles(list_associated_tiles):
+    def run_associated_tiles(list_associated_tiles, list_bool=None):
+
+        if list_bool is None:
+            list_bool = []
+
         if len(list_associated_tiles) == 0:
             if len(unvisited) == 0:
-                return False
+                return list_bool + [False]
             tile = unvisited.pop(-1)
             list_bool.append(recursive_has_periodic2(tau, [tile], unvisited))
-            return False
-        if list_associated_tiles[-1] in way:
-            return True
+            return list_bool + [False]
 
-        list_bool.append(
+        if list_associated_tiles[-1] in way:
+            return list_bool + [True]
+
+        list_bool += [
             recursive_has_periodic2(tau, way + [list_associated_tiles[-1]], unvisited)
-        )
-        list_bool.append(run_associated_tiles(list_associated_tiles[:-1]))
+        ]
+
+        list_bool += run_associated_tiles(list_associated_tiles[:-1])
+
+        return list_bool
 
     if unvisited is None and way is None:
         unvisited = tau[:]
@@ -92,5 +103,5 @@ def recursive_has_periodic2(tau, way=None, unvisited=None):
     list_bool = []
     tile = way[-1]
     list_associated_tiles = get_associated_tiles(tau, tile)
-    list_bool.append(run_associated_tiles(list_associated_tiles))
+    list_bool.extend(run_associated_tiles(list_associated_tiles))
     return any(list_bool)
