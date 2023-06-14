@@ -357,9 +357,14 @@ Parameter A : Set.
 en utilisant la fonction "++" qui permet de concatener deux listes, 
 puis prouvez que c'est une involution, en s'aidant de ces lemmes intermédiaires. *)
 
-Fixpoint rev l : list A := .
+Fixpoint rev (l:list A) : list A := 
+  match l with 
+    | nil => nil
+    | a :: m => rev(m) ++ (a::nil)
+  end.
 (* Encore une fois, on peut utiliser le principe d'induction sur les listes [induction l] *)
 Check list_ind.
+
 
 (* On vous donne également quelques lemmes intérmédiaires en Coq *)
 Check app_nil_end.
@@ -374,55 +379,78 @@ Check app_assoc.
     occurences de "b" par "a". *)
 
 Lemma rev_concat : forall xs ys, rev (xs ++ ys) = rev ys ++ rev xs.
-[...]
+intros xs ys.
+induction xs.
+-simpl.
+apply app_nil_end.
+-simpl.
+rewrite app_assoc.
+now rewrite IHxs.
 Qed.
 
-Lemma rev_singleton : forall xs x, rev (xs ++ (x :: nil)) = x :: rev xs.
-[...]  
+
+
+Lemma rev_singleton : 
+  forall xs x, rev (xs ++ (x :: nil)) = x :: rev xs.
+intros xs x.
+rewrite rev_concat.
+simpl.
+reflexivity.
 Qed.
 
 Lemma rev_involution : forall l, rev (rev l) = l.
-[...]
+intro l.
+induction l.
+-reflexivity.
+-simpl.
+now rewrite rev_singleton,IHl.
 Qed.
 
 (* Ce n'est pas très économique de retourner des listes en appelant à
 chaque fois "++". Trouver une solution plus rapide puis prouver
 l'équivalence des deux. *)
+Fixpoint rev2_aux (l acc:list A) : list A := 
+  match l with 
+    | nil => acc
+    | a :: m => rev2_aux m (a::acc)
+  end.
 
-[...]
+  Definition revopt l:= rev2_aux l nil.
+
 
 
 (* N'hésitez pas à prouver des lemmes intérmédiaires, surtout si vous utilisez des 
 fonctions auxiliaires... *)
 
-[...]
+(* [...] 
 
 Lemma revopt_correct : forall l, revopt l = rev l.
 [...]
 Qed.
-
+*)
 
 (* Voyez avec votre chargé de TP si vous avez programmé la version "optimisée" de rev. 
 dans le cas contraire, introduisez rev' et montrez que les deux fonctions coïncident *)
 
-
+(*
 [...]
+*)
 
 (* Utiliser List.fold_left pour donner une définition alternative de la fonction qui 
   calcule la longueur d'une liste *)
 Check List.fold_left.
 
 Definition fold_length (l : list A) : nat :=
-[...].
+0.
 
-[...]
+(* ?? *)
 
 (* Définissez une fonction perms : nat -> list (list nat) telle que perms k 
   renvoie la liste de toutes les permutations de la liste [0;..;k] 
   Prouvez ensuite des tas de propriétés intéressantes de perms.
   Bonne Chance ! *)
 
-[...]  
+  
 
 
 (*** Loqique, booléens, propositions et IMP ***)
@@ -446,22 +474,33 @@ Devinez :
 (* A vous de jouer : prouvez les lemmes suivants *)
 
 Lemma ex_falso: forall P : Prop, False -> P.
-[...]
+intro P.
+intro H.
+destruct H.
 Qed.
 
 (* Si l'on a A:Prop, alors ~A, la négation de A, est une notation pour "A -> False". *)
 (* Si la notation vous perturbe, vous pouvez toujours utiliser la tactique [unfold not.] *)
 
 Lemma not_not : forall P : Prop, P -> ~~P.
-[...]
+intros P H N.
+apply (N H).
 Qed.
 
+
 Lemma morgan1 : forall P Q : Prop, ~P \/ ~Q -> ~(P /\ Q).
-[...]
+intros P Q H1 H2.
+destruct H1;destruct H2 as [HP HQ] ;apply H;[exact HP|exact HQ].
 Qed.
 
 Lemma morgan2 : forall P Q : Prop, ~P /\ ~Q -> ~(P \/ Q).
-[...]
+intros P Q H1 H2.
+destruct H1.
+destruct H2.
+-apply H.
+exact H1.
+-apply H0.
+exact H1.
 Qed.
 
 
@@ -475,13 +514,17 @@ parfois automatiquement le remplacement.
 Essayez cette tactique sur les prochains lemmes pour comprendre comment elle marche en pratique  *)
 
 Lemma zero_un : ~(0=1).
-[...]
+
+intro H.
+inversion H.
 Qed.
 (*Notez que "x <> y" est un raccourci de "x = y -> False".*)
 
 (* Un autre exemple d'application de la tactique inversion, indépendamment de la négation *)
 Lemma S_out :  forall n m : nat, S n = S m -> n = m.
-  [...]
+intros n m H.
+inversion H.
+reflexivity.
 Qed.
 
 
@@ -491,7 +534,8 @@ Inductive t : Set :=
   Ze : t | Pr : t -> t | Su : t -> t.
 
 Lemma S_et_P : forall x y, Su x = Pr y -> False.
-  [...]
+intros x y H.
+inversion H.
 Qed.
 
 (** Food for thought : à méditer après ce TP, ou si par hasard vous avez fini 
@@ -523,9 +567,9 @@ Search "<" "S".
 
 
 
-Lemma inj_PS: forall x, Pr (Su x) = x -> False.
+(*Lemma inj_PS: forall x, Pr (Su x) = x -> False.
 [...]
-Qed.
+Qed.*)
 
 
 
@@ -554,7 +598,7 @@ Eval compute in (Booland false true).
 Eval compute in (Booland true true).
 
 
-(* Il est important de garder à l'esprit que ceci est spécifiqueau type "bool".
+(* Il est important de garder à l'esprit que ceci est spécifique au type "bool".
 En effet, un objet de type "Prop" n'est pas quelque chose que l'on peut 
 simplifier soit en True soit en False, mais plutôt un énoncé dont on peut 
 avoir une preuve (preuve que l'on peut construire en Coq à l'aide de tactiques).
@@ -581,7 +625,9 @@ Definition even_bool n := evenb n = true.
 (* Prouvez que 42 est pair avec cette définition *)
 
 Lemma even_42_bool : even_bool 42.
-  [...]
+unfold even_bool.
+simpl.
+reflexivity.
 Qed.
 
 (* Une seconde définition avec une fonction "double" *)
@@ -596,7 +642,10 @@ Definition even_prop n := exists k, n = double k.
 (* Prouvez une nouvelle fois que 42 est pair *)
 
 Lemma even_42_prop : even_prop 42.
-[...]
+unfold even_prop.
+exists 21.
+simpl.
+reflexivity.
 Qed.
 
 (* Et maintenant, on va prouvez que finalement, ces deux définitions sont équivalentes *)
@@ -605,26 +654,52 @@ Qed.
 Cela ne modifiera que dans l'objectif.*)
 
 Lemma Not_invol : forall a, not (not a) = a.
- [...]
+intro a.
+case a.
+-simpl.
+reflexivity.
+-simpl.
+reflexivity.
 Qed.
 
 Lemma Not_false : forall a, not a = false -> a = true.
- [...]
+intros a H.
+destruct a.
+-reflexivity.
+-inversion H.
 Qed.
 
 Lemma Not_true : forall a, not a = true -> a = false. 
- [...]
+intros a H.
+destruct a.
+-inversion H.
+-reflexivity.
 Qed.
 
 Lemma evenb_double : forall k, even_bool (double k).
- [...]
-
+intro k.
+unfold even_bool.
+induction k.
+-simpl.
+reflexivity.
+-simpl.
+rewrite IHk.
+simpl.
+reflexivity.
 Qed.
 
 (*Tentez de prouver que la définition booléenne implique la définition propositionnelle*)
 Lemma even_bool_to_prop : forall n, even_bool n -> even_prop n.
+intros n H.
+induction n.
+-unfold even_prop.
+exists 0.
+simpl.
+reflexivity.
+-unfold even_prop.
+unfold even_bool in H.
+unfold even_bool, even_prop in IHn.
 
-Abort.
 
 (* Dans certains cas, on aura besoin d'une hypothèse d'induction plus forte que ce l'on souhaite prouver.
 Note : Comme l'hypothèse d'induction 'est' notre objectif, "intro H. induction x" donnera une hypothèse d'induction

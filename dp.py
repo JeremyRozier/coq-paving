@@ -77,13 +77,16 @@ def recursive_has_periodic2(tau, way=None, unvisited=None):
 
         if len(list_associated_tiles) == 0:
             if len(unvisited) == 0:
-                return list_bool + [False]
+                list_bool.append(False)
+                return list_bool
             tile = unvisited.pop(-1)
             list_bool.append(recursive_has_periodic2(tau, [tile], unvisited))
-            return list_bool + [False]
+            list_bool.append(False)
+            return list_bool
 
         if list_associated_tiles[-1] in way:
-            return list_bool + [True]
+            list_bool.append(True)
+            return list_bool
 
         list_bool.append(
             recursive_has_periodic2(tau, way + [list_associated_tiles[-1]], unvisited)
