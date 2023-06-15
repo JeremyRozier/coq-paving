@@ -688,7 +688,9 @@ simpl.
 reflexivity.
 Qed.
 
-(*Tentez de prouver que la définition booléenne implique la définition propositionnelle*)
+
+
+(* JE SUIS COINCÉ *)
 Lemma even_bool_to_prop : forall n, even_bool n -> even_prop n.
 intros n H.
 induction n.
@@ -699,6 +701,7 @@ reflexivity.
 -unfold even_prop.
 unfold even_bool in H.
 unfold even_bool, even_prop in IHn.
+unfold evenb in H, IHn.
 
 
 (* Dans certains cas, on aura besoin d'une hypothèse d'induction plus forte que ce l'on souhaite prouver.
