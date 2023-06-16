@@ -327,14 +327,51 @@ hypothèses du contexte en utilisant:
 "retournée") définit lui-même un ordre. 
 Définissez ici ce qu'est le retournée d'une relation. *)
 
-Definition reverse (R:relation):=  forall n m, X -> X -> ~R n m.
-Check reverse.
+(*JE SUIS COINCÉ*)
+Definition reverse (R:relation):= fun x y => (x <> y -> ~R x y) \/ (x = y -> R x x).
+Print reverse.
 
 (** On peut maintenant montrer que si une relation est 
 (réflexive|anti-symétrique|transitive) sa relation inverse l'est aussi. *)
 
 
+Lemma rev_refl (R:relation): reflexive R -> reflexive (reverse R).
+intro H.
+unfold reflexive.
+intro n.
+unfold reverse.
+right.
+unfold reflexive in H.
+intro H1.
+apply H.
+Qed.
 
+(*JE SUIS COINCÉ*)
+Lemma rev_antisym (R:relation): antisymmetric R -> antisymmetric (reverse R).
+intro H0.
+unfold antisymmetric in H0.
+unfold antisymmetric.
+intros n m H1.
+unfold reverse in H1.
+unfold reverse.
+unfold not.
+intro H2.
+
+
+Qed.
+
+
+Lemma rev_trans (R:relation): transitive R -> transitive (reverse R).
+  [...]  
+Qed.
+
+
+(** On peut maintenant facilement montrer qu'un ordre inversé est 
+lui-même un ordre. *)
+
+Lemma rev_order (R:relation):  order R -> order (reverse R).
+  [...]  
+Qed.
 
 
 
@@ -690,7 +727,7 @@ Qed.
 
 
 
-(* JE SUIS COINCÉ *)
+(*Tentez de prouver que la définition booléenne implique la définition propositionnelle*)
 Lemma even_bool_to_prop : forall n, even_bool n -> even_prop n.
 intros n H.
 induction n.
@@ -702,6 +739,7 @@ reflexivity.
 unfold even_bool in H.
 unfold even_bool, even_prop in IHn.
 unfold evenb in H, IHn.
+Abort.
 
 
 (* Dans certains cas, on aura besoin d'une hypothèse d'induction plus forte que ce l'on souhaite prouver.
@@ -712,17 +750,43 @@ plus faible que "induction x" puis "intro H" dans les sous-cas.*)
 Lemma evenb_double_conv : forall n, 
 (evenb n = true -> exists k, n = double k) /\ (evenb n = false -> exists k, n = S (double k)).
 induction n.
-  (* Traitez le cas n = 0 de l'induction *)
-[...]
-  (* Début du cas successeur : *)
-    simpl. destruct IHn. split.
-    intros. destruct H0. [...] (* Premier cas du split à traiter. Si vous avez du mal à lire l'intérface Coq, n'hésitez pas à demander de l'aide *)
-    intros. destruct H. [...] (* Deuxième cas du split à traiter *)
+-split.
+intro H.
+exists 0.
+simpl.
+reflexivity.
+intro H.
+inversion H.
+-simpl. 
+destruct IHn. 
+split.
+intros. destruct H0.
+apply Not_true.
+apply H1.
+rewrite H0.
+exists (S x).
+simpl.
+reflexivity.
+intros. destruct H.
+apply Not_false.
+apply H1.
+rewrite H.
+exists x.
+reflexivity.
 Qed.
 
 (* On peut maintenant prouver l'équivalence entre les deux *)
 Lemma even_bool_prop : forall n, even_prop n <-> even_bool n.
-  [...]
+intro n.
+unfold even_prop, even_bool.
+-split.
+intro H.
+destruct H.
+rewrite H.
+apply evenb_double.
+intro H.
+apply evenb_double_conv.
+apply H.
 Qed.
 
 (* Sur cet exemple, vous avez normalement constaté qu'il est plus difficile de travailler sur 
@@ -744,13 +808,16 @@ capturé par un calcul sur les booléens. *)
 (* Un exemple plus simple serait le suivant. Prouvez ce lemme *)
 
 Lemma not_even_1001 : ~(even_bool 1001).
-[...]
+intro H.
+inversion H.
 Qed.
 
 (* Et celui-ci ? Voyez-vous le problème ?*)
 
 Lemma not_even_1001_bis : ~(even_prop 1001).
-[...]
+intro H.
+apply even_bool_prop in H.
+inversion H.
 Qed.
 
 
@@ -761,13 +828,19 @@ Il n'est pas nécessaire de la faire en TP, particulièrement si vous avez l'imp
 
 (* Prouvez le lemme suivant *)
 
+(*JE SUIS COINCÉ*)
 Lemma andb_true_iff : forall a b, Booland a b = true <-> (a = true /\ b = true).
-  [...]
+intros a b.
+split.
+-intro H.
+split.
+case a.
+reflexivity.
 Qed.
 
 (* Définissez la fonction "Boolor" pour les booléens *)
 
-Definition Boolor a b := [...].
+Definition Boolor a b := .
 
 (* Prouvez comme ci-dessus l'équivalence avec \/ *)
 
