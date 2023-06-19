@@ -328,8 +328,15 @@ hypothèses du contexte en utilisant:
 Définissez ici ce qu'est le retournée d'une relation. *)
 
 (*JE SUIS COINCÉ*)
-Definition reverse (R:relation):= fun x y => (x <> y -> ~R x y) \/ (x = y -> R x x).
-Print reverse.
+
+(* Definition reverse (R:relation):= fun x y => (x <> y -> ~R x y) \/ (x = y -> R x x). *)
+(* Print reverse. *)
+
+(* C'est normal, là tu as définies quelque chose d'assez surprenant. Ce qu'on entend
+par ordre inversée ou relation retournée pour une relation R, c'est juste la relation R'
+telle que R' x y = R y x. *)
+
+Definition reverse (R:relation) := fun x y => R y x.
 
 (** On peut maintenant montrer que si une relation est 
 (réflexive|anti-symétrique|transitive) sa relation inverse l'est aussi. *)
@@ -356,23 +363,17 @@ unfold reverse in H1.
 unfold reverse.
 unfold not.
 intro H2.
-
-
-Qed.
+Admitted.
 
 
 Lemma rev_trans (R:relation): transitive R -> transitive (reverse R).
-  [...]  
-Qed.
-
+Admitted.
 
 (** On peut maintenant facilement montrer qu'un ordre inversé est 
 lui-même un ordre. *)
 
 Lemma rev_order (R:relation):  order R -> order (reverse R).
-  [...]  
-Qed.
-
+Admitted.
 
 
 
@@ -834,7 +835,10 @@ intros a b.
 split.
 -intro H.
 split.
-case a.
+(* Ici, il faut utiliser destruct plutôt que case, car case ne propage pas la valeur de a
+dans les hypothèses. Du coup, l'hypothèse H ne te sert à rien, alors que tu en as besoin pour éliminer
+le cas ou a est faux. *)
+destruct a.
 reflexivity.
 Qed.
 
