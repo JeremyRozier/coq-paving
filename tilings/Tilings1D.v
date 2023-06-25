@@ -34,9 +34,11 @@ Definition Blue  := Color 4.
 Inductive side := Right | Left .
 
 Record tile := {
-    right  : color;
     left  : color;
+    right  : color;
   }.
+
+Check @right.
 
 (* A cell is just one place on the 1-dimensional line,
 defined by its coordinate. *)
@@ -53,11 +55,14 @@ Definition compatible_color : color -> color -> bool:=
 Transparent compatible_color.
 Hint Unfold compatible_color.
 
+
 Definition compatible_right : tile -> tile -> bool:=
-(* to do *) fun _ _ => true.
+fun tile1 tile2 => color_eqb (@right tile1) (@left tile2).
+
 
 Definition compatible_left : tile -> tile -> bool:=
-(* to do *) fun _ _ => true.
+fun tile1 tile2 => color_eqb (@left tile1) (@right tile2).
+
 
 
 (* A configuration is a map associating to any cell
@@ -70,7 +75,7 @@ Infix "=z=":=Z.eqb (at level 75).
 
 (** To make things more comfortable afterwards, we define the 
 the notion of neighbourhood for cells, by means of a function
-that maps to cell c₁ c₂ to the side of c₁ through which they are
+that maps to cell c\u2081 c\u2082 to the side of c\u2081 through which they are
 in contact, None otherwise. *)
 
 Definition neighbour: cell -> cell -> option side:=
@@ -89,14 +94,17 @@ Definition neighbour: cell -> cell -> option side:=
     end.
 
 
+
+
+
 (** This is a mathcomp trick, we define an inductive specifying 
 the previous function, together with a lemma that will allow us
 to reason by case distinction on the neighbourhood of a cell
 while having the right hypothesis automatically put in the context. *)
 
 Inductive neighbour_spec: cell -> cell-> option side -> Type:=
-|Neighbour_left (z1 z2:Z) (p:z2 = Z.pred z1): neighbour_spec (C z1) (C z2) (Some Left)
-|Neighbour_right z1 z2 (p: z2 = Z.succ z1): neighbour_spec (C z1) (C z2) (Some Right)
+|Neighbour_left (z1 z2:Z) (p:z2 = Z.pred z1)             : neighbour_spec (C z1) (C z2) (Some Left)
+|Neighbour_right z1 z2 (p: z2 = Z.succ z1)               : neighbour_spec (C z1) (C z2) (Some Right)
 |Neighbour_none z1 z2 (p:z2<>Z.pred z1) (q:z2<>Z.succ z1): neighbour_spec (C z1) (C z2) None.
 
 
@@ -118,19 +126,29 @@ Proof.
 Qed.
 
 
+
                                                       
 
 Definition compatible: configuration -> cell -> cell -> bool:=
-  fun T c d => (* to do *)true .
-
-
-Definition tiling T:Prop:= (* to do *) True.
-
+fun T c d =>
+match neighbour c d with
+| Some Right => compatible_right (T c) (T d)
+| Some Left => compatible_left (T c) (T d)
+| None => true
+end. 
+ 
+Definition tiling (T:configuration):Prop:=
+  forall c d, compatible T c d.
+(*forall m : Z, compatible_right (T (C m)) (T (C (m+1))).
+*)
 Definition periodic (T:configuration):Prop:=
-(* to do *)True.
+exists (n:nat), forall z, T (C z) = T (C (z + Z.of_nat n)).
 
+Definition weakly_periodic (T:configuration):Prop:=
+exists (n s:nat), forall z, Z.le (Z.of_nat s) z -> T (C z) = T (C (z + Z.of_nat n)).
 
-
+Definition not_weakly_periodic (T:configuration): Prop :=
+forall (n s:nat), exists z,  Z.le (Z.of_nat s) z /\ T (C z) <> T (C (z + Z.of_nat n)).
 
 (* Should be useful in the future to deal with finite part
 of a tiling/configuration. *)
@@ -148,7 +166,6 @@ Definition conf_from_view : configuration -> view -> pattern:=
 (*  Example 1: one black tile *)
 (******************************)
 
-
 Definition allblack:tile:=
   @Build_tile Black Black.
 
@@ -157,7 +174,15 @@ Definition T_allblack:configuration := fun _ => allblack.
 
 Proposition allblack_tiling : tiling T_allblack.
 Proof.
-  (* to do *)
+unfold tiling.
+unfold compatible.
+intros c d.
+case: neighbourP;intros.
+- unfold T_allblack, compatible_left.
+simpl.
+reflexivity.
+- now compute.
+- trivial.
 Qed.  
 
 
@@ -174,7 +199,8 @@ Definition bw:tile:=
 Definition wb:tile:=
   @Build_tile White Black.
 
-(* Note : la même magie pour se simplifier la vie *)
+
+(* Note : la m\u00eame magie pour se simplifier la vie *)
  
 Inductive even_spec: Z -> bool->  Type:=
 |  Even z (p:Z.even z=true) (q:Z.odd z=false) : even_spec z true
@@ -190,19 +216,236 @@ Proof.
   - rewrite H; apply (Odd z H).  now rewrite <- Z.negb_even, H.
 Qed.
 
+Check Z.even 4.
 
-Definition alternating:configuration := (* to do, on pourra s'aider de Z.even ! *).
+Definition alternating:configuration := fun c: cell => 
+match c with
+|C z => if (Z.even z) then bw else wb
+end.
+
+Proposition alternating_right_compatible:
+  forall c d, neighbour c d = some Right
+  -> compatible_right (alternating c) (alternating d).
+Proof.
+intros m n H.
+admit.
+Admitted.
+
+Proposition color_eqb_sym:
+  (forall c d, color_eqb c d = color_eqb d c).
+Admitted.
+
+
+Proposition compatible_right_left (T:configuration):
+  forall c d, (compatible_right (T c) (T d)
+<->
+compatible_left (T d) (T c)).
+Proof.
+unfold compatible_left,compatible_right;
+split;intros;rewrite color_eqb_sym;trivial.
+Qed.
+Print neighbour.
+
+
+Proposition compatible_right_tiling T:
+  (forall z1 z2, z2 = Z.succ z1 
+    -> compatible_right (T (C z1)) (T (C z2)))
+->
+(tiling T).
+Proof.
+intros H c d.
+unfold compatible.
+case:neighbourP;intros.
+apply compatible_right_left.
+apply H.
+rewrite p.
+now rewrite Z.succ_pred.
+now apply H.
+trivial.
+Qed.
 
 
 
 Proposition alternating_tiling : tiling alternating.
 Proof.
-  (* to do *)
-Qed.  
+unfold tiling, alternating.
+intros m n.
+unfold compatible.
+case:neighbourP;intros.
+assert (H:=evenP z1);
+induction H;
+rewrite p Z.even_pred q;now simpl.
+assert (H:=evenP z1);
+induction H;
+rewrite p Z.even_succ q;now simpl.
+trivial.
+Qed.
 
 Proposition alternating_periodic : periodic alternating.
 Proof.
-  (* to do *)
-Qed.  
+unfold periodic.
+unfold alternating.
+exists 2.
+intros.
+rewrite Z.even_add.
+case:evenP;intros.
+-now simpl.
+-now simpl.
+Qed.
 
-        
+(******************************)
+(*  Example 3 - three tiles   *)
+(*   - black / white
+     - black / black          *)
+(*   - white / black          *)
+(******************************)
+Search "leq".
+Search "log".
+
+Check Z.abs.
+Check Z.log2.
+Check Z.div.
+Check Z.pow(Z.log2(Z.abs(_))).
+
+Search nat "pow".
+Definition is_pow_2_nat (n:nat) := Nat.eqb (Nat.pow 2 (Nat.log2 (n))) n.
+
+Search  Z.geb.
+
+
+Definition aperiodic_increasing:configuration := fun c: cell => 
+match c with
+|C z => if (z <=? 1)%Z then allblack else let n:=Z.to_nat z in
+   if is_pow_2_nat(n) then bw else if (is_pow_2_nat(n - 1)) then wb else allblack
+end.
+
+Lemma is_pow_2_nat_equiv: forall n:nat, is_pow_2_nat(n) <-> exists m:nat, n = Nat.pow 2 m.
+Admitted.
+
+Lemma is_pow_2_nat_succ: forall z : Z, (1 < z)%Z /\ is_pow_2_nat (Z.to_nat z) ->
+is_pow_2_nat (Z.to_nat (Z.succ z)) = false.
+Admitted.
+
+Lemma is_pow2_nat_succ_moins: forall z: Z, is_pow_2_nat (Z.to_nat z) -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = true.
+Admitted.
+
+Lemma not_is_pow2_nat_succ_moins: forall z: Z, is_pow_2_nat (Z.to_nat z) = false -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = false.
+Admitted.
+
+Proposition aperiodic_increasing_tiling : tiling aperiodic_increasing.
+Proof.
+apply compatible_right_tiling.
+intros z1 z2 H.
+unfold aperiodic_increasing.
+case:ifP;intros.
+case:ifP;intros.
+1:{
+unfold compatible_right.
+now simpl.
+}
+1:{
+rewrite H.
+rewrite H in n.
+case:ifP;intros.
+1:{
+unfold compatible_right.
+now simpl.
+}
+case:ifP;intros.
+unfold compatible_right.
+simpl.
+apply Z.leb_le in i.
+apply Z.leb_gt in n.
+admit.
+}
+case:ifP.
+1:{
+intro H0.
+rewrite H.
+assert ((Z.succ z1 <=? 1 )%Z = false).
+apply Z.leb_gt.
+apply Z.leb_gt in n.
+lia.
+rewrite H1.
+apply Z.leb_gt in n.
+assert ((1 < z1)%Z /\ is_pow_2_nat (Z.to_nat z1)).
+split.
+exact n.
+exact H0.
+apply is_pow_2_nat_succ in H2.
+rewrite H2.
+apply is_pow2_nat_succ_moins in H0.
+now rewrite H0.
+} 
+intro H0.
+case:ifP;intros.
+rewrite H.
+assert ((Z.succ z1 <=? 1)%Z = false).
+apply Z.leb_gt.
+apply Z.leb_gt in n.
+lia.
+rewrite H1.
+case:ifP;intros.
+now simpl.
+apply not_is_pow2_nat_succ_moins in H0.
+now rewrite H0.
+rewrite H.
+assert ((Z.succ z1 <=? 1)%Z = false).
+apply Z.leb_gt.
+apply Z.leb_gt in n.
+lia.
+rewrite H1.
+case:ifP;intros.
+now simpl.
+apply not_is_pow2_nat_succ_moins in H0.
+now rewrite H0.
+Admitted.
+
+Lemma nat_le_power : forall s n:nat, (Z.of_nat s <= 2 ^ (Z.of_nat (n + s) + 1))%Z.
+Admitted.
+
+Check Nat.pow.
+
+Lemma aperiodic_increasing_not_period: forall n s:nat, is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n)) = false.
+Admitted.
+
+Lemma power_not_le_1: forall n s: nat, (2 ^ (Z.of_nat (n + s) + 1) <=? 1)%Z = false.
+Admitted.
+
+Lemma power_of_2: forall n s : nat, is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1))) = true.
+Admitted.
+
+Lemma power_not_le_1_n: forall n s:nat, (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n <=? 1)%Z = false.
+Admitted.
+
+Proposition aperiodic_increasing_aperiodic : not_weakly_periodic aperiodic_increasing.
+Proof.
+unfold not_weakly_periodic.
+unfold aperiodic_increasing.
+intros.
+exists (Z.pow 2 (Z.of_nat (n + s) + 1%Z)).
+split.
+1:{
+apply nat_le_power.
+}
+rewrite power_not_le_1.
+rewrite power_of_2.
+rewrite power_not_le_1_n.
+rewrite aperiodic_increasing_not_period.
+now case:ifP;intros.
+Qed.
+
+(* Formalization oriented graphs *)
+
+Print nat.
+
+Definition relation_right := fun t1 t2: tile => compatible_right t1 t2.
+
+
+Inductive path : list tile -> Prop := 
+|Path_two_tiles: forall (t1 t2 : tile), relation_right t1 t2 -> path (t1::t2::nil)
+|Path_more: forall (t1 t2 : tile) (list_t:list tile), relation_right t1 t2 -> path (t2::list_t) -> path (t1::t2::list_t).
+
+Definition cycle : path -> Prop := match path with
+|Path_more t1 t2 list_t => 
+
