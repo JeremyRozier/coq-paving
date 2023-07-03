@@ -319,17 +319,66 @@ match c with
    if is_pow_2_nat(n) then bw else if (is_pow_2_nat(n - 1)) then wb else allblack
 end.
 
+
+(* Je bouche des trous ! *)
 Lemma is_pow_2_nat_equiv: forall n:nat, is_pow_2_nat(n) <-> exists m:nat, n = Nat.pow 2 m.
+  intros n;split;[intros H |intros (m,Hm)].
+  exists (Nat.log2 n);  now apply Nat.eqb_eq in H.
+  rewrite Hm. unfold is_pow_2_nat.
+  apply Nat.eqb_eq. f_equal. rewrite Nat.log2_pow2;lia.
+Qed.  
+
+Lemma is_pow_2_succ:
+  forall n, (1 < n) -> is_pow_2_nat n -> is_pow_2_nat (S n) = false.
+Proof.
+  intros n Hn Pow.
+  rewrite Nat.eqb_neq; intro Eq.
+  apply Nat.eqb_eq in Pow.
+  assert (H:=Nat.log2_succ_le n).
+  pose m:=Nat.log2 n. 
+  destruct (le_lt_eq_dec _ _ H) as [H1|H1];fold m in H1,Pow.
+  - assert (Nat.log2 n.+1 <= m)%coq_nat by lia.
+  assert (m <=Nat.log2 n.+1)%coq_nat.
+  apply Nat.log2_le_mono;lia.
+  assert (Hm: m =Nat.log2 n.+1) by lia.
+  rewrite -Hm in Eq. rewrite Pow in Eq. lia.
+  - rewrite H1 in Eq.
+  rewrite Nat.pow_succ_r in Eq;try lia.
+  rewrite Pow in Eq. simpl in Eq.
+  rewrite -add1n in Eq.
+  assert ( n = 1 ).
+  replace n with ((n + (n + 0)%coq_nat)%coq_nat - n).
+  rewrite Eq.
+  apply Nat.add_sub_eq_l. 
+  rewrite Nat.add_comm. reflexivity.
+  rewrite Nat.add_0_r.
+  now apply Nat.add_sub_eq_l. 
+  rewrite H0 in Hn. inversion Hn.
+Qed.
+
+
+Lemma is_pow_2_nat_succ:
+  forall z : Z, (1 < z)%Z -> is_pow_2_nat (Z.to_nat z) ->
+           is_pow_2_nat (Z.to_nat (Z.succ z)) = false.
+Proof.
+  intros z Hz Pow.
+  replace (Z.to_nat (Z.succ z)) with ((Z.to_nat z).+1).
+  apply is_pow_2_succ;trivial.
+  case:ltP;intros;trivial.
+  exfalso;apply n.
+  replace 1 with (Z.to_nat 1) by reflexivity.
+  apply Z2Nat.inj_lt;lia.
+  rewrite Z2Nat.inj_succ;trivial.
+  lia.
+Qed.
+
+     
+Lemma is_pow2_nat_succ_moins:
+  forall z: Z, is_pow_2_nat (Z.to_nat z) -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = true.
 Admitted.
 
-Lemma is_pow_2_nat_succ: forall z : Z, (1 < z)%Z /\ is_pow_2_nat (Z.to_nat z) ->
-is_pow_2_nat (Z.to_nat (Z.succ z)) = false.
-Admitted.
-
-Lemma is_pow2_nat_succ_moins: forall z: Z, is_pow_2_nat (Z.to_nat z) -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = true.
-Admitted.
-
-Lemma not_is_pow2_nat_succ_moins: forall z: Z, is_pow_2_nat (Z.to_nat z) = false -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = false.
+Lemma not_is_pow2_nat_succ_moins:
+  forall z: Z, is_pow_2_nat (Z.to_nat z) = false -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = false.
 Admitted.
 
 Proposition aperiodic_increasing_tiling : tiling aperiodic_increasing.
