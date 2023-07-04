@@ -319,8 +319,6 @@ match c with
    if is_pow_2_nat(n) then bw else if (is_pow_2_nat(n - 1)) then wb else allblack
 end.
 
-
-(* Je bouche des trous ! *)
 Lemma is_pow_2_nat_equiv: forall n:nat, is_pow_2_nat(n) <-> exists m:nat, n = Nat.pow 2 m.
   intros n;split;[intros H |intros (m,Hm)].
   exists (Nat.log2 n);  now apply Nat.eqb_eq in H.
@@ -496,6 +494,17 @@ Inductive path : list tile -> Prop :=
 |Path_two_tiles: forall (t1 t2 : tile), relation_right t1 t2 -> path (t1::t2::nil)
 |Path_more: forall (t1 t2 : tile) (list_t:list tile), relation_right t1 t2 -> path (t2::list_t) -> path (t1::t2::list_t).
 
-Definition cycle : path -> Prop := match path with
-|Path_more t1 t2 list_t => 
+Definition cycle := fun (list_t : list tile) => match list_t with
+|nil => False
+|cons t xs => path (list_t ++ (t::nil))
+end.
+
+Inductive path2 (t1 t2 :tile) : list tile -> Prop :=
+|path_two nil: forall t3 : relation_right t3 t2 -> path(t3::t2::nil)
+|path_cons t4::xs : forall t3 : relation_right t3 t4 -> relation_right t1 t3 -> path(t1::t3::t4::xs).
+
+
+
+Definition tiling_cycle : cycle -> tiling
+
 
