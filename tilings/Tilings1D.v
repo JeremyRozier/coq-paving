@@ -2,8 +2,8 @@ Require Import Bool.
 Require Export ZArith.
 Require Import Psatz.
 From mathcomp Require Import ssreflect ssrbool ssrfun eqtype ssrnat.
-From mathcomp Require Import seq path fintype.
-From mathcomp Require Import fingraph.
+(* From mathcomp Require Import seq path fintype. *)
+(* From mathcomp Require Import fingraph. *)
 
 
 (** * Definitions *)
@@ -487,22 +487,23 @@ Qed.
 
 Print nat.
 
-Definition relation_right := fun t1 t2: tile => compatible_right t1 t2.
+Definition edge := fun t1 t2: tile => compatible_right t1 t2.
 
 
-Inductive path : list tile -> Prop := 
-|Path_two_tiles: forall (t1 t2 : tile), relation_right t1 t2 -> path (t1::t2::nil)
-|Path_more: forall (t1 t2 : tile) (list_t:list tile), relation_right t1 t2 -> path (t2::list_t) -> path (t1::t2::list_t).
+(* Inductive path : list tile -> Prop :=  *)
+(* |Path_two_tiles: forall (t1 t2 : tile), edge t1 t2 -> path (t1::t2::nil) *)
+(* |Path_more: forall (t1 t2 : tile) (list_t:list tile), edge t1 t2 -> path (t2::list_t) -> path (t1::t2::list_t). *)
 
-Definition cycle := fun (list_t : list tile) => match list_t with
-|nil => False
-|cons t xs => path (list_t ++ (t::nil))
-end.
+(* Definition cycle := fun (list_t : list tile) => match list_t with *)
+(* |nil => False *)
+(* |cons t xs => path (list_t ++ (t::nil)) *)
+(* end. *)
 
-Inductive path2 (t1 t2 :tile) : list tile -> Prop :=
-|path_two nil: forall t3 : relation_right t3 t2 -> path(t3::t2::nil)
-|path_cons t4::xs : forall t3 : relation_right t3 t4 -> relation_right t1 t3 -> path(t1::t3::t4::xs).
+Inductive path: list tile -> tile -> tile -> Prop :=
+|path_two: forall t1 t2, edge t1 t2 -> path (t1::t2::nil) t1 t2
+|path_cons: forall t1 t2 t3 p, edge t1 t2 -> path p t2 t3 -> path (t1::p) t1 t3.
 
+Definition cycle p x:=path p x x.
 
 
 Definition tiling_cycle : cycle -> tiling
