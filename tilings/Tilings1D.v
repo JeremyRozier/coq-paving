@@ -503,12 +503,12 @@ Definition edge := fun t1 t2: tile => compatible_right t1 t2.
 (* end. *)
 
 
-(* J'ai légèrement modifié ta seconde version, le but étant que la propriété 
-path contienne aussi l'information de où à où. Comme ça, on peut tout simplement
-dire qu'un cycle est juste un chemin depuis un sommet vers lui-même. 
+(* J'ai l\u00e9g\u00e8rement modifi\u00e9 ta seconde version, le but \u00e9tant que la propri\u00e9t\u00e9 
+path contienne aussi l'information de o\u00f9 \u00e0 o\u00f9. Comme \u00e7a, on peut tout simplement
+dire qu'un cycle est juste un chemin depuis un sommet vers lui-m\u00eame. 
 
-Et j'ai remplacé list par seq, mais c'est quasiment pareil, c'est plutôt en prévision
-de futures extensions possibles pour rester basés sur certaines librairies.*)
+Et j'ai remplac\u00e9 list par seq, mais c'est quasiment pareil, c'est plut\u00f4t en pr\u00e9vision
+de futures extensions possibles pour rester bas\u00e9s sur certaines librairies.*)
 
 Inductive path: seq tile -> tile -> tile -> Prop :=
 |path_two: forall t1 t2, edge t1 t2 -> path (t1::t2::nil) t1 t2
@@ -517,13 +517,33 @@ Inductive path: seq tile -> tile -> tile -> Prop :=
 Definition cycle p x:=path p x x.
 
 
-(* Remarque qu'ici on pourrait aussi travailler en version booléenne, 
-je ne sais pas si ce sera utile par la suite, mais c'est tout à fait possible:
-- la relation "edge" est décidable,
-- la propriété "path p x y" l'est si "edge" l'est 
-- la propriété "cycle p x" l'est si "path" l'est 
+(* Remarque qu'ici on pourrait aussi travailler en version bool\u00e9enne, 
+je ne sais pas si ce sera utile par la suite, mais c'est tout \u00e0 fait possible:
+- la relation "edge" est d\u00e9cidable,
+- la propri\u00e9t\u00e9 "path p x y" l'est si "edge" l'est 
+- la propri\u00e9t\u00e9 "cycle p x" l'est si "path" l'est 
  *)
 
-Definition tiling_cycle : cycle -> tiling
+Print cycle.
+
+Fixpoint list_length (l: list tile) : nat :=
+match l with
+| nil => 0
+| _ :: xs => S (list_length xs)
+end.
+
+(*Print list.*)
+
+Fixpoint fonction p x c := match p with 
+|nil => x
+|cons y p2 => match c with 
+  |C z => if (z mod (Z.of_nat (list_length p)) =z= (Z.of_nat (list_length p)) - (Z.of_nat (list_length p2) - 1)) then y else fonction p2 x c 
+  end
+end.
+
+(*Print fonction.*)
+
+
+Definition tiling_cycle := forall x p, fun cycle => fun c:cell => fonction p x c.
 
 
