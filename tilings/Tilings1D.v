@@ -526,24 +526,45 @@ je ne sais pas si ce sera utile par la suite, mais c'est tout \u00e0 fait possib
 
 Print cycle.
 
-Fixpoint list_length (l: list tile) : nat :=
+Fixpoint nb_edges (l: seq tile) : Z :=
 match l with
-| nil => 0
-| _ :: xs => S (list_length xs)
+| nil => -1
+| _ :: xs => Z.succ (nb_edges xs)
 end.
 
 (*Print list.*)
 
-Fixpoint fonction p x c := match p with 
+Print nat.
+(*Fixpoint fonction p x c := match p with 
 |nil => x
 |cons y p2 => match c with 
-  |C z => if (z mod (Z.of_nat (list_length p)) =z= (Z.of_nat (list_length p)) - (Z.of_nat (list_length p2) - 1)) then y else fonction p2 x c 
+  |C z => if (z mod (Z.of_nat (nb_edges p)) =z= (Z.of_nat (nb_edges p2))) then y else fonction p2 x c 
   end
+end.*)
+
+
+Parameter nth : seq tile -> nat -> tile.
+
+
+Lemma nth_succ : forall (p : seq tile) (x:tile) (z: Z), 
+if (Z.succ z mod nb_edges p  =z= 0) then nth p (Z.to_nat (Z.succ z mod nb_edges p)) = x 
+else nth p (Z.to_nat (Z.succ z mod nb_edges p)) = nth p (Z.to_nat (Z.succ z)).
+Admitted.
+ 
+(*Definition tiling_cycle x p (H:cycle p x):configuration
+  := fun (c:cell)=> fonction p x c.*)
+
+Definition tiling_cycle x p (H:cycle p x):configuration
+  := fun (c:cell)=> match c with 
+|C z => nth p (Z.to_nat(z mod nb_edges p))
 end.
 
-(*Print fonction.*)
 
-
-Definition tiling_cycle := forall x p, fun cycle => fun c:cell => fonction p x c.
+Lemma tiling_cycle_tiling : forall x p H, tiling (tiling_cycle x p H).
+Proof.
+intros.
+apply compatible_right_tiling;intros.
+unfold tiling_cycle;intros.
+rewrite H0.
 
 
