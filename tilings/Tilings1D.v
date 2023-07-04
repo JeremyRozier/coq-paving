@@ -406,6 +406,7 @@ simpl.
 apply Z.leb_le in i.
 apply Z.leb_gt in n.
 admit.
+admit.
 }
 case:ifP.
 1:{
@@ -417,11 +418,11 @@ apply Z.leb_gt in n.
 lia.
 rewrite H1.
 apply Z.leb_gt in n.
-assert ((1 < z1)%Z /\ is_pow_2_nat (Z.to_nat z1)).
-split.
-exact n.
-exact H0.
-apply is_pow_2_nat_succ in H2.
+(* assert ((1 < z1)%Z /\ is_pow_2_nat (Z.to_nat z1)). *)
+(* split. *)
+(* exact n. *)
+(* exact H0. *)
+assert (H2:=is_pow_2_nat_succ _ n H0).
 rewrite H2.
 apply is_pow2_nat_succ_moins in H0.
 now rewrite H0.
