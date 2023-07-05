@@ -543,20 +543,49 @@ Print nat.
 end.*)
 
 
-Parameter nth : seq tile -> nat -> tile.
+Fixpoint nth (l : seq tile) (n : nat) default: tile :=
+match l with
+| nil => default
+| cons x xs => match n with
+ | O => x
+ | S m => nth xs m default
+ end
+end.
 
 
-Lemma nth_succ : forall (p : seq tile) (x:tile) (z: Z), 
-if (Z.succ z mod nb_edges p  =z= 0) then nth p (Z.to_nat (Z.succ z mod nb_edges p)) = x 
-else nth p (Z.to_nat (Z.succ z mod nb_edges p)) = nth p (Z.to_nat (Z.succ z)).
+Lemma path_compatible_right:
+    forall p z x y, path p x y  -> (z < nb_edges p)%Z ->
+             compatible_right (nth p (Z.to_nat z) x) (nth p (Z.abs_nat(Z.succ z)) x).
 Admitted.
- 
+
+Lemma cycle_length: forall c x, cycle c x -> nth c 0 = nth c (Z.abs_nat (nb_edges c)).
+Admitted.
+
+Lemma nb_edges_cycle_pos: forall c x, cycle c x -> (nb_edges c > 0)%Z.
+Admitted.
+
+
+
+Lemma mod_bound:
+  forall (a:Z) (z:Z), (z>0)%Z -> (0%Z <= (a mod z)%Z < z)%Z.
+Proof.
+  intros a z Hz.
+  assert (Bla:=Z_div_mod a z Hz ) .
+  pose (D:= Z.div_eucl a z).
+  assert (D = Z.div_eucl a z) by reflexivity.
+  destruct D as (q,r).
+  unfold Z.modulo. rewrite -H.
+  rewrite -H in Bla;now destruct Bla as (_,Eq).
+Qed.
+
+
+
 (*Definition tiling_cycle x p (H:cycle p x):configuration
   := fun (c:cell)=> fonction p x c.*)
 
 Definition tiling_cycle x p (H:cycle p x):configuration
   := fun (c:cell)=> match c with 
-|C z => nth p (Z.to_nat(z mod nb_edges p))
+|C z => nth p (Z.abs_nat(z mod nb_edges p)) x
 end.
 
 
@@ -566,5 +595,10 @@ intros.
 apply compatible_right_tiling;intros.
 unfold tiling_cycle;intros.
 rewrite H0.
+pose proof H as H1.
+pose proof H as H2.
+apply cycle_length in H1.
+apply nb_edges_cycle_pos in H2.
+pose (z3 := z1 mod nb_edges p).
 
 
