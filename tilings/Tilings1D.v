@@ -570,10 +570,22 @@ Admitted.
 Lemma cycle_cases: forall c z, 
 Z.abs_nat (Z.succ z mod nb_edges c) = 0 \/ 
 Z.abs_nat(Z.succ z mod nb_edges c) = Z.abs_nat(Z.succ (z mod nb_edges c)).
+Proof.
+intros.
 Admitted.
 
-Lemma cycle_end: forall c z, Z.abs_nat (Z.succ z mod nb_edges c) = 0 -> Z.abs_nat (z mod nb_edges c) = Z.abs_nat (Z.pred (nb_edges c)).
+
+Lemma cycle_end: forall c z, Z.abs_nat (Z.succ z mod nb_edges c) = 0 ->
+Z.abs_nat (z mod nb_edges c) = Z.abs_nat (Z.pred (nb_edges c)).
+Proof.
+intros.
+Search Z.modulo.
+unfold Z.modulo.
+unfold Z.modulo in H.
+Search Z.div_eucl.
 Admitted.
+
+
 
 
 
@@ -601,9 +613,6 @@ Definition tiling_cycle x p (H:cycle p x):configuration
 end.
 
 Lemma geq_ge : forall z k : Z, (z > k)%Z -> (z >= k)%Z.
-Admitted.
-
-Lemma abs_eq_iff2: forall n: Z, Z.abs n = n <-> (n >= 0)%Z.
 Admitted.
 
 
@@ -643,7 +652,8 @@ rewrite Nat2Z.inj_abs_nat.
 apply nb_edges_cycle_pos in H.
 pose proof H as H1.
 apply geq_ge in H.
-apply abs_eq_iff2 in H.
+apply Z.ge_le_iff in H.
+apply Z.abs_eq_iff in H.
 rewrite H.
 apply Z_mod_plus with (a := z) (b := 1%Z) (c := nb_edges p) in H1.
 rewrite Z.mul_1_l in H1.
