@@ -554,15 +554,27 @@ end.
 
 
 Lemma path_compatible_right:
-    forall p z x y, path p x y  -> (z < nb_edges p)%Z ->
-             compatible_right (nth p (Z.to_nat z) x) (nth p (Z.abs_nat(Z.succ z)) x).
+    forall p z x, (z < nb_edges p)%Z ->
+             compatible_right (nth p (Z.abs_nat z) x) (nth p (Z.abs_nat(Z.succ z)) x).
 Admitted.
 
-Lemma cycle_length: forall c x, cycle c x -> nth c 0 = nth c (Z.abs_nat (nb_edges c)).
+Lemma cycle_length: forall c x, cycle c x -> nth c 0 = nth c (Z.abs_nat (Z.succ (Z.pred (nb_edges c)))).
+intros.
+rewrite Z.succ_pred.
+unfold cycle in H.
 Admitted.
 
 Lemma nb_edges_cycle_pos: forall c x, cycle c x -> (nb_edges c > 0)%Z.
 Admitted.
+
+Lemma cycle_cases: forall c z, 
+Z.abs_nat (Z.succ z mod nb_edges c) = 0 \/ 
+Z.abs_nat(Z.succ z mod nb_edges c) = Z.abs_nat(Z.succ (z mod nb_edges c)).
+Admitted.
+
+Lemma cycle_end: forall c z, Z.abs_nat (Z.succ z mod nb_edges c) = 0 -> Z.abs_nat (z mod nb_edges c) = Z.abs_nat (Z.pred (nb_edges c)).
+Admitted.
+
 
 
 
@@ -589,6 +601,8 @@ Definition tiling_cycle x p (H:cycle p x):configuration
 end.
 
 
+
+
 Lemma tiling_cycle_tiling : forall x p H, tiling (tiling_cycle x p H).
 Proof.
 intros.
@@ -599,6 +613,20 @@ pose proof H as H1.
 pose proof H as H2.
 apply cycle_length in H1.
 apply nb_edges_cycle_pos in H2.
-pose (z3 := z1 mod nb_edges p).
+destruct (cycle_cases p z1).
+1:{
+rewrite H3.
+rewrite H1.
+apply cycle_end in H3.
+rewrite H3.
+apply path_compatible_right.
+lia.
+}
+rewrite H3.
+apply path_compatible_right.
+Search "mod".
+apply mod_bound.
+apply H2.
+Qed.
 
 
