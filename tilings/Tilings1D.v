@@ -600,7 +600,11 @@ Definition tiling_cycle x p (H:cycle p x):configuration
 |C z => nth p (Z.abs_nat(z mod nb_edges p)) x
 end.
 
+Lemma geq_ge : forall z k : Z, (z > k)%Z -> (z >= k)%Z.
+Admitted.
 
+Lemma abs_eq_iff2: forall n: Z, Z.abs n = n <-> (n >= 0)%Z.
+Admitted.
 
 
 Lemma tiling_cycle_tiling : forall x p H, tiling (tiling_cycle x p H).
@@ -624,9 +628,24 @@ lia.
 }
 rewrite H3.
 apply path_compatible_right.
-Search "mod".
 apply mod_bound.
 apply H2.
 Qed.
 
-
+Lemma periodic_cycle_tiling : forall x p H, periodic (tiling_cycle x p H).
+Proof.
+intros.
+unfold periodic.
+exists (Z.abs_nat(nb_edges p)).
+intros.
+unfold tiling_cycle;intros.
+rewrite Nat2Z.inj_abs_nat.
+apply nb_edges_cycle_pos in H.
+pose proof H as H1.
+apply geq_ge in H.
+apply abs_eq_iff2 in H.
+rewrite H.
+apply Z_mod_plus with (a := z) (b := 1%Z) (c := nb_edges p) in H1.
+rewrite Z.mul_1_l in H1.
+now rewrite H1.
+Qed.
