@@ -382,74 +382,32 @@ Admitted.
 Proposition aperiodic_increasing_tiling : tiling aperiodic_increasing.
 Proof.
 apply compatible_right_tiling.
-intros z1 z2 H.
-unfold aperiodic_increasing.
-case:ifP;intros.
-case:ifP;intros.
-1:{
-unfold compatible_right.
-now simpl.
+intros z1 z2 H; subst.
+unfold aperiodic_increasing,compatible_right.
+repeat case:ifP;intros H H1;intros;simpl;trivial;
+  try (apply Z.leb_gt in n).
+{
+  apply Z.leb_le in i.
+  (* Grâce à i et n on peut obtenir z1=1 *)
+  replace z1 with 1%Z in * by lia;simpl in *.
+  rewrite -H1.
+  (* ici on peut juste calculer, on aurait aussi pu mettre "now" 
+   au début de la commande suivante. *)
+  compute. reflexivity.
 }
-1:{
-rewrite H.
-rewrite H in n.
-case:ifP;intros.
-1:{
-unfold compatible_right.
-now simpl.
+{
+  assert ((Z.succ z1 <=? 1 )%Z = false).
+  apply Z.leb_gt.
+  apply Z.leb_gt in n.
+  lia.
+  now rewrite -H0.
 }
-case:ifP;intros.
-1:{
-unfold compatible_right.
-simpl.
-apply Z.leb_le in i.
-apply Z.leb_gt in n.
-admit.
-}
-now simpl.
-}
-case:ifP.
-1:{
-intro H0.
-rewrite H.
-assert ((Z.succ z1 <=? 1 )%Z = false).
-apply Z.leb_gt.
-apply Z.leb_gt in n.
-lia.
-rewrite H1.
-apply Z.leb_gt in n.
-(* assert ((1 < z1)%Z /\ is_pow_2_nat (Z.to_nat z1)). *)
-(* split. *)
-(* exact n. *)
-(* exact H0. *)
-assert (H2:=is_pow_2_nat_succ _ n H0).
-rewrite H2.
-apply is_pow2_nat_succ_moins in H0.
-now rewrite H0.
-} 
-intro H0.
-case:ifP;intros.
-rewrite H.
-assert ((Z.succ z1 <=? 1)%Z = false).
-apply Z.leb_gt.
-apply Z.leb_gt in n.
-lia.
-rewrite H1.
-case:ifP;intros.
-now simpl.
-apply not_is_pow2_nat_succ_moins in H0.
-now rewrite H0.
-rewrite H.
-assert ((Z.succ z1 <=? 1)%Z = false).
-apply Z.leb_gt.
-apply Z.leb_gt in n.
-lia.
-rewrite H1.
-case:ifP;intros.
-now simpl.
-apply not_is_pow2_nat_succ_moins in H0.
-now rewrite H0.
-Admitted.
+{ now rewrite -(is_pow_2_nat_succ _ n i). }
+{ rewrite -H. now apply is_pow2_nat_succ_moins. }
+{ now rewrite -(not_is_pow2_nat_succ_moins _ n0).}
+{ now rewrite -(not_is_pow2_nat_succ_moins _ n1).}
+Qed.
+
 
 Lemma nat_le_power : forall s n:nat, (Z.of_nat s <= 2 ^ (Z.of_nat (n + s) + 1))%Z.
 Admitted.
