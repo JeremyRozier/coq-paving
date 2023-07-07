@@ -227,14 +227,19 @@ Proposition alternating_right_compatible:
   forall c d, neighbour c d = some Right
   -> compatible_right (alternating c) (alternating d).
 Proof.
-intros m n H.
-admit.
-Admitted.
+  intros m n H.
+  Check neighbourP.
+  assert (N:=neighbourP m n).
+  rewrite H in N. inversion N;subst.
+  unfold alternating.
+  now case:evenP;intros;rewrite Z.even_succ q.
+Qed.
 
 Proposition color_eqb_sym:
   (forall c d, color_eqb c d = color_eqb d c).
-Admitted.
-
+  intros. unfold color_eqb;destruct c,d;simpl.
+  apply Nat.eqb_sym.
+Qed.
 
 Proposition compatible_right_left (T:configuration):
   forall c d, (compatible_right (T c) (T d)
@@ -370,14 +375,28 @@ Proof.
   lia.
 Qed.
 
-     
+
+Lemma to_nat_succ_sub:
+  forall z:Z, (0<=z)%Z -> Z.to_nat (Z.succ z) -1 = Z.to_nat z.
+Proof.
+  intros.
+  rewrite Z2Nat.inj_succ;try assumption.
+  now rewrite subSS subn0.
+Qed.
+
+
 Lemma is_pow2_nat_succ_moins:
-  forall z: Z, is_pow_2_nat (Z.to_nat z) -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = true.
-Admitted.
+  forall z: Z, (0<=z)%Z -> is_pow_2_nat (Z.to_nat z) -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = true.
+Proof.
+  intros;now rewrite to_nat_succ_sub.
+Qed.
 
 Lemma not_is_pow2_nat_succ_moins:
-  forall z: Z, is_pow_2_nat (Z.to_nat z) = false -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = false.
-Admitted.
+  forall z: Z, (0<=z)%Z -> is_pow_2_nat (Z.to_nat z) = false -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = false.
+Proof.
+  intros;now rewrite to_nat_succ_sub.
+Qed.
+
 
 Proposition aperiodic_increasing_tiling : tiling aperiodic_increasing.
 Proof.
@@ -403,9 +422,9 @@ repeat case:ifP;intros H H1;intros;simpl;trivial;
   now rewrite -H0.
 }
 { now rewrite -(is_pow_2_nat_succ _ n i). }
-{ rewrite -H. now apply is_pow2_nat_succ_moins. }
-{ now rewrite -(not_is_pow2_nat_succ_moins _ n0).}
-{ now rewrite -(not_is_pow2_nat_succ_moins _ n1).}
+{ rewrite -H. now apply is_pow2_nat_succ_moins;try lia. }
+{ now rewrite -(not_is_pow2_nat_succ_moins _ _ n0);try lia.}
+{ now rewrite -(not_is_pow2_nat_succ_moins _ _ n1);try lia.}
 Qed.
 
 
