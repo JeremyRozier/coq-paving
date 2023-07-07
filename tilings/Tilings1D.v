@@ -399,12 +399,14 @@ unfold compatible_right.
 now simpl.
 }
 case:ifP;intros.
+1:{
 unfold compatible_right.
 simpl.
 apply Z.leb_le in i.
 apply Z.leb_gt in n.
 admit.
-admit.
+}
+now simpl.
 }
 case:ifP.
 1:{
@@ -567,26 +569,32 @@ Admitted.
 Lemma nb_edges_cycle_pos: forall c x, cycle c x -> (nb_edges c > 0)%Z.
 Admitted.
 
-Lemma cycle_cases: forall c z, 
-Z.abs_nat (Z.succ z mod nb_edges c) = 0 \/ 
-Z.abs_nat(Z.succ z mod nb_edges c) = Z.abs_nat(Z.succ (z mod nb_edges c)).
+Lemma cycle_cases: forall (z n : Z),
+(Z.succ z mod n = 0)%Z \/ 
+(Z.succ z mod n = Z.succ (z mod n))%Z.
 Proof.
 intros.
 Admitted.
 
 
-Lemma cycle_end: forall c z, Z.abs_nat (Z.succ z mod nb_edges c) = 0 ->
-Z.abs_nat (z mod nb_edges c) = Z.abs_nat (Z.pred (nb_edges c)).
+Lemma succ_mod_0: forall n z, (n>0)%Z -> (Z.succ z mod n)%Z = 0%Z ->
+(z mod n)%Z = (Z.pred (n)).
 Proof.
-intros.
-Search Z.modulo.
-unfold Z.modulo.
-unfold Z.modulo in H.
-Search Z.div_eucl.
-Admitted.
-
-
-
+  intros n z Hn H.
+  assert (n<>0)%Z by lia.
+  assert (Bla:=Z.div_eucl_eq (Z.succ z) n H0).
+  unfold Z.modulo in H.
+  pose (D:= Z.div_eucl (Z.succ z) n).
+  assert (D = Z.div_eucl (Z.succ z) n) by reflexivity.
+  destruct D as (q,r).
+  rewrite -H1 in Bla,H.
+  rewrite H in Bla.
+  rewrite (Zpred_succ z) Bla.
+  replace (Z.pred (n * q + 0)) with (Z.pred n + Z.pred q * n)%Z by lia.
+  rewrite Z_mod_plus_full.
+  apply Z.mod_small.
+  split;lia.
+Qed.
 
 
 
@@ -626,12 +634,15 @@ pose proof H as H1.
 pose proof H as H2.
 apply cycle_length in H1.
 apply nb_edges_cycle_pos in H2.
-destruct (cycle_cases p z1).
+destruct (cycle_cases z1 (nb_edges p)).
 1:{
 rewrite H3.
 rewrite H1.
-apply cycle_end in H3.
-rewrite H3.
+apply succ_mod_0 with (z := z1) in H2.
+2:{
+now rewrite H3.
+}
+rewrite H2.
 apply path_compatible_right.
 lia.
 }
