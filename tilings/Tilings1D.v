@@ -556,8 +556,10 @@ end.
 
 
 Lemma path_compatible_right:
-    forall p z x, (z < nb_edges p)%Z ->
+    forall p z x y, path p x y -> (z < nb_edges p)%Z ->
              compatible_right (nth p (Z.abs_nat z) x) (nth p (Z.abs_nat(Z.succ z)) x).
+intros.
+
 Admitted.
 
 Lemma cycle_length: forall c x, cycle c x -> nth c 0 = nth c (Z.abs_nat (Z.succ (Z.pred (nb_edges c)))).
@@ -643,11 +645,19 @@ apply succ_mod_0 with (z := z1) in H2.
 now rewrite H3.
 }
 rewrite H2.
-apply path_compatible_right.
+apply path_compatible_right with (y:=x).
+1:{
+unfold cycle in H.
+apply H.
+}
 lia.
 }
 rewrite H3.
-apply path_compatible_right.
+apply path_compatible_right with (y:=x).
+1:{
+unfold cycle in H.
+apply H.
+}
 apply mod_bound.
 apply H2.
 Qed.
