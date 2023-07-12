@@ -407,11 +407,11 @@ repeat case:ifP;intros H H1;intros;simpl;trivial;
   try (apply Z.leb_gt in n).
 {
   apply Z.leb_le in i.
-  (* Grâce à i et n on peut obtenir z1=1 *)
+  (* Gr\u00e2ce \u00e0 i et n on peut obtenir z1=1 *)
   replace z1 with 1%Z in * by lia;simpl in *.
   rewrite -H1.
   (* ici on peut juste calculer, on aurait aussi pu mettre "now" 
-   au début de la commande suivante. *)
+   au d\u00e9but de la commande suivante. *)
   compute. reflexivity.
 }
 {
@@ -423,24 +423,79 @@ repeat case:ifP;intros H H1;intros;simpl;trivial;
 }
 { now rewrite -(is_pow_2_nat_succ _ n i). }
 { rewrite -H. now apply is_pow2_nat_succ_moins;try lia. }
-{ now rewrite -(not_is_pow2_nat_succ_moins _ _ n0);try lia.}
-{ now rewrite -(not_is_pow2_nat_succ_moins _ _ n1);try lia.}
+now rewrite -(not_is_pow2_nat_succ_moins _ _ n0);try lia.
+now rewrite -(not_is_pow2_nat_succ_moins _ _ n1);try lia.
 Qed.
 
 
 Lemma nat_le_power : forall s n:nat, (Z.of_nat s <= 2 ^ (Z.of_nat (n + s) + 1))%Z.
+Proof.
+intros.
+Search (Z.pow _ + _) (Z.mul (Z.pow _ Z.pow _)).
+rewrite Nat2Z.inj_add.
+rewrite Zpower_exp.
+2:{
+lia.
+}
+2:{
+now simpl.
+}
+rewrite Zpower_exp.
+assert ((Z.of_nat s <= 2^(Z.of_nat s))%Z).
+apply Zpow_facts.Zpower2_le_lin.
+lia.
 Admitted.
+
+
+
+
 
 Check Nat.pow.
 
+(* Zpow_facts.Zpower2_le_lin: forall n : Z, (0 <= n)%Z -> (n <= 2 ^ n)%Z *)
+
 Lemma aperiodic_increasing_not_period: forall n s:nat, is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n)) = false.
+intros.
 Admitted.
+
 
 Lemma power_not_le_1: forall n s: nat, (2 ^ (Z.of_nat (n + s) + 1) <=? 1)%Z = false.
-Admitted.
+Proof.
+intros.
+apply Z.leb_gt.
+rewrite Nat2Z.inj_add.
+assert ((0 <= Z.of_nat n + Z.of_nat s + 1)%Z).
+-lia.
+apply Z.log2_lt_cancel.
+apply Z.log2_pow2 in H.
+rewrite H.
+simpl.
+lia.
+Qed.
+
 
 Lemma power_of_2: forall n s : nat, is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1))) = true.
-Admitted.
+intros.
+apply is_pow_2_nat_equiv.
+exists (Z.to_nat((Z.of_nat(n + s) + 1)%Z)).
+rewrite Z2Nat.inj_pow.
+1:{
+rewrite Z2Nat.inj_add.
+  1:{
+  now rewrite Nat2Z.id.
+  }
+  { lia. }
+  {
+  now trivial.
+  }
+}
+{
+now trivial.
+}
+{
+lia.
+}
+Qed.
 
 Lemma power_not_le_1_n: forall n s:nat, (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n <=? 1)%Z = false.
 Admitted.
@@ -533,27 +588,73 @@ end.
 
 
 Lemma path_compatible_right:
-    forall p z x y, path p x y -> (z < nb_edges p)%Z ->
-             compatible_right (nth p (Z.abs_nat z) x) (nth p (Z.abs_nat(Z.succ z)) x).
+    forall p n x y, path p x y -> n < Z.abs_nat(nb_edges p) ->
+             compatible_right (nth p n x) (nth p (S n) x).
 intros.
 
 Admitted.
 
-Lemma cycle_length: forall c x, cycle c x -> nth c 0 = nth c (Z.abs_nat (Z.succ (Z.pred (nb_edges c)))).
-intros.
-rewrite Z.succ_pred.
-unfold cycle in H.
+Lemma path_fst: forall p x y d, path p x y -> nth p 0 d = x.
+Proof.
+  intros p x y d P.
+  now inversion P;subst;simpl.
+Qed.
+
+  
+Lemma path_last: forall p x y d, path p x y -> nth p (Z.abs_nat (nb_edges p)) d = y.
+Proof.
+  intros p x y d P.
+  induction P.
+  - simpl. reflexivity.
+  - simpl.
+    assert (Z.abs_nat (Z.succ(nb_edges p)) = S (Z.abs_nat ((nb_edges p)))) by admit.
+    rewrite H0. exact IHP.
 Admitted.
+
+Lemma cycle_length: forall c x d, cycle c x -> nth c 0 d = nth c (Z.abs_nat (nb_edges c)) d.
+  intros c x d Cyc.
+  rewrite (path_fst c x x d Cyc).
+  now rewrite (path_last c x x d Cyc).
+Qed.
+
+
 
 Lemma nb_edges_cycle_pos: forall c x, cycle c x -> (nb_edges c > 0)%Z.
+intros.
+induction c.
+assert (H2: 3 <= 4).
+1:{
+simpl.
+}
 Admitted.
 
-Lemma cycle_cases: forall (z n : Z),
+Lemma cycle_cases: forall (z n : Z), (n>0)%Z ->
 (Z.succ z mod n = 0)%Z \/ 
 (Z.succ z mod n = Z.succ (z mod n))%Z.
 Proof.
-intros.
-Admitted.
+  intros.
+  assert (Hn:(n<>0)%Z) by lia.
+  assert (Eq:=Z_div_mod z n H ).
+  pose (D:= Z.div_eucl z n).
+  assert (D = Z.div_eucl z n) by reflexivity.
+  destruct D as (q,r).
+  rewrite -H0 in Eq.
+  destruct Eq as (Eq,Bound).
+  subst.
+  destruct (Z.eq_dec r (n-1)).
+  left. rewrite e.
+  replace (Z.succ (n * q + (n - 1))) with (n * (q + 1))%Z by lia.
+  symmetry.
+  apply Z.mod_unique_pos with (q:=(q+1)%Z);lia.
+  right.
+  assert (r+1 <n)%Z by lia.
+  replace (Z.succ (n * q + r)) with (n * q + (r+1))%Z by lia.
+  replace (((n * q + (r + 1)) mod n)%Z) with (r+1)%Z.
+  replace ((n * q + r) mod n)%Z with r.
+  lia.
+  apply Z.mod_unique_pos with (q:=q);[lia|reflexivity].
+  apply Z.mod_unique_pos with (q:=q);[lia|reflexivity].
+Qed.
 
 
 Lemma succ_mod_0: forall n z, (n>0)%Z -> (Z.succ z mod n)%Z = 0%Z ->
@@ -600,8 +701,9 @@ Definition tiling_cycle x p (H:cycle p x):configuration
 end.
 
 Lemma geq_ge : forall z k : Z, (z > k)%Z -> (z >= k)%Z.
-Admitted.
-
+Proof.
+lia.
+Qed.
 
 Lemma tiling_cycle_tiling : forall x p H, tiling (tiling_cycle x p H).
 Proof.
@@ -611,18 +713,34 @@ unfold tiling_cycle;intros.
 rewrite H0.
 pose proof H as H1.
 pose proof H as H2.
-apply cycle_length in H1.
+apply cycle_length with (d:=x) in H1.
 apply nb_edges_cycle_pos in H2.
 destruct (cycle_cases z1 (nb_edges p)).
 1:{
+apply H2.
+}
+1:{
 rewrite H3.
 rewrite H1.
+pose proof H2 as H4.
 apply succ_mod_0 with (z := z1) in H2.
 2:{
 now rewrite H3.
 }
 rewrite H2.
-apply path_compatible_right with (y:=x).
+rewrite Zabs2Nat.inj_pred.
+1:{ 
+replace (Z.abs_nat (nb_edges p)) with ((Z.abs_nat (nb_edges p)).-1.+1).
+  1:{
+    {apply path_compatible_right with (y:=x);unfold cycle in H.
+    apply H.
+    admit.
+    }
+  }
+  admit.
+}
+Admitted.
+(*apply path_compatible_right with (y:=x).
 1:{
 unfold cycle in H.
 apply H.
@@ -638,6 +756,7 @@ apply H.
 apply mod_bound.
 apply H2.
 Qed.
+*)
 
 Lemma periodic_cycle_tiling : forall x p H, periodic (tiling_cycle x p H).
 Proof.
@@ -657,3 +776,48 @@ apply Z_mod_plus with (a := z) (b := 1%Z) (c := nb_edges p) in H1.
 rewrite Z.mul_1_l in H1.
 now rewrite H1.
 Qed.
+
+Lemma existence_path :forall c , tiling c 
+-> exists i j, i <> j /\ c (C i) = c (C j) -> exists p, path p (c (C i)) (c (C i)).
+Admitted.
+
+
+Lemma tiling_exists_cycle : forall c, tiling c -> exists p x, cycle p x.
+Proof.
+  intros c H.
+  apply existence_path in H.
+Admitted.
+
+
+Inductive side_2D := North | East| West | South.
+
+Record tile_2D := {
+    north  : color;
+    east : color;
+    west  : color;
+    south : color;
+}.
+
+Inductive cell_2D := C2 : Z -> Z -> cell_2D.
+
+
+Definition compatible_north : tile_2D -> tile_2D -> bool:=
+fun tile1 tile2 => color_eqb (@north tile1) (@south tile2).
+
+
+Definition compatible_east : tile_2D -> tile_2D -> bool:=
+fun tile1 tile2 => color_eqb (@east tile1) (@west tile2).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
