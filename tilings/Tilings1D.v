@@ -455,11 +455,8 @@ Admitted.
 
 Check Nat.pow.
 
-(* Zpow_facts.Zpower2_le_lin: forall n : Z, (0 <= n)%Z -> (n <= 2 ^ n)%Z *)
-
-Lemma aperiodic_increasing_not_period: forall n s:nat,
- is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n)) = false.
-intros.
+Lemma aperiodic_increasing_not_period:
+  forall n s:nat, is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n)) = false.
 Admitted.
 
 
@@ -534,16 +531,6 @@ Print nat.
 Definition edge := fun t1 t2: tile => compatible_right t1 t2.
 
 
-(* Inductive path : list tile -> Prop :=  *)
-(* |Path_two_tiles: forall (t1 t2 : tile), edge t1 t2 -> path (t1::t2::nil) *)
-(* |Path_more: forall (t1 t2 : tile) (list_t:list tile), edge t1 t2 -> path (t2::list_t) -> path (t1::t2::list_t). *)
-
-(* Definition cycle := fun (list_t : list tile) => match list_t with *)
-(* |nil => False *)
-(* |cons t xs => path (list_t ++ (t::nil)) *)
-(* end. *)
-
-
 (* J'ai l\u00e9g\u00e8rement modifi\u00e9 ta seconde version, le but \u00e9tant que la propri\u00e9t\u00e9 
 path contienne aussi l'information de o\u00f9 \u00e0 o\u00f9. Comme \u00e7a, on peut tout simplement
 dire qu'un cycle est juste un chemin depuis un sommet vers lui-m\u00eame. 
@@ -606,6 +593,12 @@ Proof.
   now inversion P;subst;simpl.
 Qed.
 
+Lemma path_fst: forall p x y d, path p x y -> nth p 0 d = x.
+Proof.
+  intros p x y d P.
+  now inversion P;subst;simpl.
+Qed.
+
   
 Lemma path_last: forall p x y d, path p x y -> nth p (Z.abs_nat (nb_edges p)) d = y.
 Proof.
@@ -613,7 +606,7 @@ Proof.
   induction P.
   - simpl. reflexivity.
   - simpl.
-    assert (Z.abs_nat (Z.succ(nb_edges p)) = S (Z.abs_nat ((nb_edges p)))) by admit.
+    assert (Z.abs_nat (Z.succ (nb_edges p))= S (Z.abs_nat ((nb_edges p)))) by admit.
     rewrite H0. exact IHP.
 Admitted.
 
@@ -622,8 +615,6 @@ Lemma cycle_length: forall c x d, cycle c x -> nth c 0 d = nth c (Z.abs_nat (nb_
   rewrite (path_fst c x x d Cyc).
   now rewrite (path_last c x x d Cyc).
 Qed.
-
-
 
 Lemma nb_edges_cycle_pos: forall c x, cycle c x -> (nb_edges c > 0)%Z.
 intros.
@@ -634,33 +625,7 @@ simpl.
 }
 Admitted.
 
-Lemma cycle_cases: forall (z n : Z), (n>0)%Z ->
-(Z.succ z mod n = 0)%Z \/ 
-(Z.succ z mod n = Z.succ (z mod n))%Z.
-Proof.
-  intros.
-  assert (Hn:(n<>0)%Z) by lia.
-  assert (Eq:=Z_div_mod z n H ).
-  pose (D:= Z.div_eucl z n).
-  assert (D = Z.div_eucl z n) by reflexivity.
-  destruct D as (q,r).
-  rewrite -H0 in Eq.
-  destruct Eq as (Eq,Bound).
-  subst.
-  destruct (Z.eq_dec r (n-1)).
-  left. rewrite e.
-  replace (Z.succ (n * q + (n - 1))) with (n * (q + 1))%Z by lia.
-  symmetry.
-  apply Z.mod_unique_pos with (q:=(q+1)%Z);lia.
-  right.
-  assert (r+1 <n)%Z by lia.
-  replace (Z.succ (n * q + r)) with (n * q + (r+1))%Z by lia.
-  replace (((n * q + (r + 1)) mod n)%Z) with (r+1)%Z.
-  replace ((n * q + r) mod n)%Z with r.
-  lia.
-  apply Z.mod_unique_pos with (q:=q);[lia|reflexivity].
-  apply Z.mod_unique_pos with (q:=q);[lia|reflexivity].
-Qed.
+
 
 
 Lemma succ_mod_0: forall n z, (n>0)%Z -> (Z.succ z mod n)%Z = 0%Z ->
@@ -697,6 +662,34 @@ Proof.
 Qed.
 
 
+
+Lemma cycle_cases: forall (z n : Z), (n>0)%Z ->
+(Z.succ z mod n = 0)%Z \/ 
+(Z.succ z mod n = Z.succ (z mod n))%Z.
+Proof.
+  intros.
+  assert (Hn:(n<>0)%Z) by lia.
+  assert (Eq:=Z_div_mod z n H ).
+  pose (D:= Z.div_eucl z n).
+  assert (D = Z.div_eucl z n) by reflexivity.
+  destruct D as (q,r).
+  rewrite -H0 in Eq.
+  destruct Eq as (Eq,Bound).
+  subst.
+  destruct (Z.eq_dec r (n-1)).
+  left. rewrite e.
+  replace (Z.succ (n * q + (n - 1))) with (n * (q + 1))%Z by lia.
+  symmetry.
+  apply Z.mod_unique_pos with (q:=(q+1)%Z);lia.
+  right.
+  assert (r+1 <n)%Z by lia.
+  replace (Z.succ (n * q + r)) with (n * q + (r+1))%Z by lia.
+  replace (((n * q + (r + 1)) mod n)%Z) with (r+1)%Z.
+  replace ((n * q + r) mod n)%Z with r.
+  lia.
+  apply Z.mod_unique_pos with (q:=q);[lia|reflexivity].
+  apply Z.mod_unique_pos with (q:=q);[lia|reflexivity].
+Qed.
 
 (*Definition tiling_cycle x p (H:cycle p x):configuration
   := fun (c:cell)=> fonction p x c.*)
