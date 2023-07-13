@@ -324,7 +324,8 @@ match c with
    if is_pow_2_nat(n) then bw else if (is_pow_2_nat(n - 1)) then wb else allblack
 end.
 
-Lemma is_pow_2_nat_equiv: forall n:nat, is_pow_2_nat(n) <-> exists m:nat, n = Nat.pow 2 m.
+Lemma is_pow_2_nat_equiv: forall n:nat, is_pow_2_nat(n)
+ <-> exists m:nat, n = Nat.pow 2 m.
   intros n;split;[intros H |intros (m,Hm)].
   exists (Nat.log2 n);  now apply Nat.eqb_eq in H.
   rewrite Hm. unfold is_pow_2_nat.
@@ -386,13 +387,15 @@ Qed.
 
 
 Lemma is_pow2_nat_succ_moins:
-  forall z: Z, (0<=z)%Z -> is_pow_2_nat (Z.to_nat z) -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = true.
+  forall z: Z, (0<=z)%Z -> is_pow_2_nat (Z.to_nat z) ->
+ is_pow_2_nat(Z.to_nat (Z.succ z) -1) = true.
 Proof.
   intros;now rewrite to_nat_succ_sub.
 Qed.
 
 Lemma not_is_pow2_nat_succ_moins:
-  forall z: Z, (0<=z)%Z -> is_pow_2_nat (Z.to_nat z) = false -> is_pow_2_nat(Z.to_nat (Z.succ z) -1) = false.
+  forall z: Z, (0<=z)%Z -> is_pow_2_nat (Z.to_nat z) = false ->
+ is_pow_2_nat(Z.to_nat (Z.succ z) -1) = false.
 Proof.
   intros;now rewrite to_nat_succ_sub.
 Qed.
@@ -454,7 +457,8 @@ Check Nat.pow.
 
 (* Zpow_facts.Zpower2_le_lin: forall n : Z, (0 <= n)%Z -> (n <= 2 ^ n)%Z *)
 
-Lemma aperiodic_increasing_not_period: forall n s:nat, is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n)) = false.
+Lemma aperiodic_increasing_not_period: forall n s:nat,
+ is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n)) = false.
 intros.
 Admitted.
 
@@ -474,7 +478,8 @@ lia.
 Qed.
 
 
-Lemma power_of_2: forall n s : nat, is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1))) = true.
+Lemma power_of_2: forall n s : nat,
+is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (s + 1) + n))) = true.
 intros.
 apply is_pow_2_nat_equiv.
 exists (Z.to_nat((Z.of_nat(n + s) + 1)%Z)).
@@ -497,7 +502,9 @@ lia.
 }
 Qed.
 
-Lemma power_not_le_1_n: forall n s:nat, (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n <=? 1)%Z = false.
+Lemma power_not_le_1_n: forall n s:nat, 
+(2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n <=? 1)%Z = false.
+
 Admitted.
 
 Proposition aperiodic_increasing_aperiodic : not_weakly_periodic aperiodic_increasing.
@@ -593,7 +600,6 @@ Lemma path_compatible_right:
 intros.
 
 Admitted.
-
 Lemma path_fst: forall p x y d, path p x y -> nth p 0 d = x.
 Proof.
   intros p x y d P.
@@ -777,37 +783,14 @@ rewrite Z.mul_1_l in H1.
 now rewrite H1.
 Qed.
 
-Lemma existence_path :forall c , tiling c 
--> exists i j, i <> j /\ c (C i) = c (C j) -> exists p, path p (c (C i)) (c (C i)).
-Admitted.
+
 
 
 Lemma tiling_exists_cycle : forall c, tiling c -> exists p x, cycle p x.
 Proof.
   intros c H.
-  apply existence_path in H.
+  assert (H2 := exists i j, i <> j /\ c (C i) = c (C j)).
 Admitted.
-
-
-Inductive side_2D := North | East| West | South.
-
-Record tile_2D := {
-    north  : color;
-    east : color;
-    west  : color;
-    south : color;
-}.
-
-Inductive cell_2D := C2 : Z -> Z -> cell_2D.
-
-
-Definition compatible_north : tile_2D -> tile_2D -> bool:=
-fun tile1 tile2 => color_eqb (@north tile1) (@south tile2).
-
-
-Definition compatible_east : tile_2D -> tile_2D -> bool:=
-fun tile1 tile2 => color_eqb (@east tile1) (@west tile2).
-
 
 
 
