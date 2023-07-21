@@ -473,9 +473,13 @@ Proof.
 Lemma Z_le_power : forall s n:nat, (Z.of_nat n <= 2 ^ (Z.of_nat (s + n) + 1))%Z.
 Proof.
   intros.
-  replace ( 2 ^ (Z.of_nat (s + n) + 1))%Z with (Z.of_nat( 2 ^ ( (s + n) + 1))) by admit.
+  replace ( 2 ^ (Z.of_nat (s + n) + 1))%Z with (Z.of_nat( 2 ^ ( (s + n) + 1))).
   apply inj_le.
+  Search Nat.pow.
+  assert (H:s+n+1<2^(s+n+1)).
+  (*apply Nat.pow_gt_lin_r with (a:=s) (b:=n).*)
   admit.
+  
 Admitted.
 
 
@@ -483,13 +487,29 @@ Admitted.
 
 Lemma aperiodic_increasing_not_period:
   forall n s:nat, n>0 -> is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n)) = false.
+Proof.
+intros.
+assert (H2: 2 ^ (n + s + 1) < (2 ^ (n + s + 1) + n)).
+Search (_ < _).
 
+(*apply Nat.lt_add_pos_r.*)
+Search (Nat.pow).
+induction n.
+inversion H.
   (* On devrait avoir :
 2 ^ (Z.of_nat (n + s) + 1) < (2 ^ (Z.of_nat (n + s) + 1) + n) < (2 ^ (Z.of_nat (n + s) + 2)
-la première triviale pour n>0
-la deuxième conséquence de Z_le_power.
+la premi\u00e8re triviale pour n>0
+la deuxi\u00e8me cons\u00e9quence de Z_le_power.
 *)
 Admitted.
+
+(*
+
+ltn_psubLR:
+  forall (m n : nat) [p : nat],
+  0 < p -> (m - n < p) = (m < n + p)
+
+*)
 
 
 Lemma power_not_le_1: forall n s: nat, (2 ^ (Z.of_nat (n + s) + 1) <=? 1)%Z = false.
@@ -534,8 +554,10 @@ Qed.
 
 Lemma power_not_le_1_n: forall n s:nat, 
     (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n <=? 1)%Z = false.
-  (* devrait être simple *)
-Admitted.
+  (* devrait \u00eatre simple *)
+intros.
+
+Search (_ <=? _ = false).
 
 
 Proposition aperiodic_increasing_aperiodic : not_ultimately_periodic aperiodic_increasing.
@@ -553,7 +575,7 @@ rewrite power_of_2.
 rewrite power_not_le_1_n.
 rewrite aperiodic_increasing_not_period.
 now case:ifP;intros.
-destruct n as (n,Hn);simpl. admit. (* TODO: Étienne *)
+destruct n as (n,Hn);simpl. admit. (* TODO: \u00c9tienne *)
 Admitted. 
 
 
@@ -629,7 +651,7 @@ Lemma path_compatible_right:
              compatible_right (nth p n x) (nth p (S n) x).
 Proof.
   intros.
-  (* TODO : Jérémy *)
+  (* TODO : J\u00e9r\u00e9my *)
 Admitted.
 
 
@@ -648,7 +670,9 @@ Proof.
   - simpl. reflexivity.
   - simpl.
     assert (Z.abs_nat (Z.succ (nb_edges p))= S (Z.abs_nat ((nb_edges p)))).
-    { apply Zabs2Nat.inj_succ. assert (Nb:=nb_edges_path_pos p t2 t3 P). lia.}
+    {apply Zabs2Nat.inj_succ. assert (Nb:=nb_edges_path_pos p t2 t3 P). 
+    lia.
+    }
     rewrite H0. exact IHP.
 Qed.
 
@@ -770,10 +794,10 @@ replace (Z.abs_nat (nb_edges p)) with ((Z.abs_nat (nb_edges p)).-1.+1).
   1:{
     {apply path_compatible_right with (y:=x);unfold cycle in H.
     apply H.
-    admit.   (* TODO : Jérémy *)
+    admit.   (* TODO : J\u00e9r\u00e9my *)
     }
   }
-  admit.   (* TODO : Jérémy *)
+  admit.   (* TODO : J\u00e9r\u00e9my *)
 }
 Admitted.
 (*apply path_compatible_right with (y:=x).
@@ -800,7 +824,7 @@ intros.
 unfold periodic.
 assert (Nb:=nb_edges_cycle_pos p x H).
 assert ((Z.abs_nat(nb_edges p)>0)%coq_nat).
-admit.   (* TODO : Étienne *)
+admit.   (* TODO : \u00c9tienne *)
 exists (makeperiod (Z.abs_nat(nb_edges p)) H0).
 intros.
 unfold tiling_cycle;intros.
@@ -818,7 +842,7 @@ Admitted.
 
 
 
-(* TODO : Étienne *)
+(* TODO : \u00c9tienne *)
 Lemma tiling_exists_cycle : forall c, tiling c -> exists p x, cycle p x.
 Proof.
   intros c H.
