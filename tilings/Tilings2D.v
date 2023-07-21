@@ -110,16 +110,15 @@ Proof.
   intros c1 c2.
   induction c1,c2.
   unfold neighbour.
-  pose (b:= z0 =z= Z.pred z).
-  assert ((z0 =z= Z.pred z) = b) by reflexivity.
-  induction b.
+  case:ifP;intros.
+  apply Neighbour_west. 
+  apply andb_prop in i.
+  destruct i.
+  apply Z.eqb_eq in H, H0.
+  now rewrite H.
+  now rewrite H0.
   rewrite H.
-  - apply Z.eqb_eq in H. now  apply Neighbour_left.
-  - pose (b:= z0 =z= Z.succ z).
-  assert ((z0 =z= Z.succ z) = b) by reflexivity.
-  induction b;rewrite H0.
-    + apply Z.eqb_eq in H0. now  apply Neighbour_right.
-    + apply Z.eqb_neq in H,H0. now apply Neighbour_none.
+  Search (_ && _).
 Qed.
 
 
