@@ -448,75 +448,68 @@ Qed.
 
 
 
+Lemma nat_lt_power : forall s n:nat, ( s < 2 ^ ((n + s) + 1)).
+Proof.
+  intros s n.
+  apply leq_trans with (2^s).
+  - now apply ltn_expl.
+  - apply leq_pexp2l;try reflexivity.
+    apply leq_trans with (n+s);[apply leq_addl|apply leq_addr].
+Qed.
+
+
 Lemma nat_le_power : forall s n:nat, ( s <= 2 ^ ((n + s) + 1)).
 Proof.
-  admit.
-  Admitted.
-(*   intros. *)
-(* Search (Z.pow _ + _) (Z.mul (Z.pow _ Z.pow _)). *)
-(* rewrite Nat2Z.inj_add. *)
-(* rewrite Zpower_exp. *)
-(* 2:{ *)
-(* lia. *)
-(* } *)
-(* 2:{ *)
-(* now simpl. *)
-(* } *)
-(* rewrite Zpower_exp. *)
-(* assert ((Z.of_nat s <= 2^(Z.of_nat s))%Z). *)
-(* apply Zpow_facts.Zpower2_le_lin. *)
-(* lia. *)
-(* Admitted. *)
+ intros s n.
+ now apply ltnW,nat_lt_power.
+Qed.
 
 
 
-Lemma Z_le_power : forall s n:nat, (Z.of_nat n <= 2 ^ (Z.of_nat (s + n) + 1))%Z.
+Lemma expn_is_pow: forall n, Nat.pow 2 n = expn 2 n.
+Proof.
+  induction n.
+  - reflexivity.
+  - simpl. rewrite expnS.
+    do 2 rewrite mulSn; rewrite mul0n.
+    now rewrite IHn.
+Qed.
+
+Lemma Z_le_power : forall s n:nat, (Z.of_nat n <=Z.pow 2 (Z.of_nat ((s + n) + 1)))%Z.
 Proof.
   intros.
-  replace ( 2 ^ (Z.of_nat (s + n) + 1))%Z with (Z.of_nat( 2 ^ ( (s + n) + 1))).
+  replace (2%Z) with (Z.of_nat 2) by reflexivity.
+  rewrite <- Nat2Z.inj_pow.
   apply inj_le.
-  Search Nat.pow.
-  assert (H:s+n+1<2^(s+n+1)).
-  (*apply Nat.pow_gt_lin_r with (a:=s) (b:=n).*)
-  admit.
-  
-Admitted.
+  apply (elimT leP).
+  eapply leq_trans;[apply (nat_le_power n s)|].
+  now rewrite expn_is_pow.
+Qed.
 
 
-
-
-Lemma aperiodic_increasing_not_period:
-  forall n s:nat, n>0 -> is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n)) = false.
+Lemma between_not_pow:
+  forall p n, 2^n < p -> p< 2^(n.+1) -> is_pow_2_nat p = false.
 Proof.
-intros.
-assert (H2: 2 ^ (n + s + 1) < (2 ^ (n + s + 1) + n)).
-Search (_ < _).
+  intros p n H1 H2.
+  pose (b:= is_pow_2_nat p).
+  assert (IsPow:is_pow_2_nat p=b) by reflexivity.
+  destruct b;try now rewrite IsPow.
+  exfalso.
+  apply is_pow_2_nat_equiv in IsPow.
+  destruct IsPow as (m,Hm).
+  rewrite Hm in H1,H2.
+  rewrite expn_is_pow in H1,H2.
+  apply (@ltn_pexp2l 2) in H1,H2;try reflexivity.
+  apply (elimT leP) in H1,H2.
+  lia.
+Qed.
+  
 
-(*apply Nat.lt_add_pos_r.*)
-Search (Nat.pow).
-induction n.
-inversion H.
-  (* On devrait avoir :
-2 ^ (Z.of_nat (n + s) + 1) < (2 ^ (Z.of_nat (n + s) + 1) + n) < (2 ^ (Z.of_nat (n + s) + 2)
-la premi\u00e8re triviale pour n>0
-la deuxi\u00e8me cons\u00e9quence de Z_le_power.
-*)
-Admitted.
-
-(*
-
-ltn_psubLR:
-  forall (m n : nat) [p : nat],
-  0 < p -> (m - n < p) = (m < n + p)
-
-*)
-
-
-Lemma power_not_le_1: forall n s: nat, (2 ^ (Z.of_nat (n + s) + 1) <=? 1)%Z = false.
+Lemma power_not_le_1: forall n s: nat, (2 ^ (Z.of_nat (n + s + 1)) <=? 1)%Z = false.
 Proof.
 intros.
 apply Z.leb_gt.
-rewrite Nat2Z.inj_add.
+do 2 rewrite Nat2Z.inj_add.
 assert ((0 <= Z.of_nat n + Z.of_nat s + 1)%Z).
 -lia.
 apply Z.log2_lt_cancel.
@@ -528,36 +521,62 @@ Qed.
 
 
 Lemma power_of_2: forall n s : nat,
-    is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s) + 1))) = true.
+    is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s + 1)))) = true.
 Proof.
 intros.
 apply is_pow_2_nat_equiv.
-exists (Z.to_nat((Z.of_nat(n + s) + 1)%Z)).
+exists (Z.to_nat((Z.of_nat(n + s + 1))%Z)).
 rewrite Z2Nat.inj_pow.
-1:{
-rewrite Z2Nat.inj_add.
-  1:{
-  now rewrite Nat2Z.id.
-  }
-  { lia. }
-  {
-  now trivial.
-  }
-}
-{
-now trivial.
-}
-{
-lia.
-}
-Qed.
+admit.
+Admitted.
+(* 1:{ *)
+(* rewrite Z2Nat.inj_add. *)
+(*   1:{ *)
+(*   now rewrite Nat2Z.id. *)
+(*   } *)
+(*   { lia. } *)
+(*   { *)
+(*   now trivial. *)
+(*   } *)
+(* } *)
+(* { *)
+(* now trivial. *)
+(* } *)
+(* { *)
+(* lia. *)
+(* } *)
+(* Qed. *)
 
 Lemma power_not_le_1_n: forall n s:nat, 
-    (2 ^ (Z.of_nat (n + s) + 1) + Z.of_nat n <=? 1)%Z = false.
+    (2 ^ (Z.of_nat (n + s + 1)) + Z.of_nat n <=? 1)%Z = false.
   (* devrait \u00eatre simple *)
 intros.
 
 Search (_ <=? _ = false).
+Admitted.
+
+
+
+
+
+Lemma not_pow_aux:
+  forall n s:nat, n>0 -> is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s + 1)) + Z.of_nat n)) = false.
+Proof.
+  intros.
+  rewrite Z2Nat.inj_add;try lia.
+  rewrite Z2Nat.inj_pow;try lia.
+  rewrite expn_is_pow;do 2 rewrite Nat2Z.id.
+  apply (between_not_pow _ ((n + s + 1))).
+  { rewrite <- (addn0 (2 ^ (n + s + 1))) at 1. 
+    now rewrite ltn_add2l. }
+  { rewrite expnS.
+    do 2 rewrite mulSn; rewrite mul0n;rewrite addn0.
+    rewrite ltn_add2l. replace (n+s+1) with (s+n+1).
+    apply nat_lt_power.
+    f_equal;now rewrite addnC.
+  }
+Qed.
+
 
 
 Proposition aperiodic_increasing_aperiodic : not_ultimately_periodic aperiodic_increasing.
@@ -565,18 +584,19 @@ Proof.
 unfold not_ultimately_periodic.
 unfold aperiodic_increasing.
 intros.
-exists (Z.pow 2 (Z.of_nat (n + s) + 1%Z)).
+exists ((2 ^ (Z.of_nat (n + s + 1)))%Z).
 split.
 1:{
-apply Z_le_power.
+  apply (Z_le_power n s).
 }
 rewrite power_not_le_1.
 rewrite power_of_2.
 rewrite power_not_le_1_n.
-rewrite aperiodic_increasing_not_period.
+rewrite not_pow_aux.
 now case:ifP;intros.
-destruct n as (n,Hn);simpl. admit. (* TODO: \u00c9tienne *)
-Admitted. 
+destruct n as (n,Hn);simpl.
+apply (introT leP). lia.
+Qed.
 
 
 
@@ -823,8 +843,8 @@ Proof.
 intros.
 unfold periodic.
 assert (Nb:=nb_edges_cycle_pos p x H).
-assert ((Z.abs_nat(nb_edges p)>0)%coq_nat).
-admit.   (* TODO : \u00c9tienne *)
+assert ((0 < (Z.abs_nat(nb_edges p)))%coq_nat).
+{ rewrite <- Zabs2Nat.inj_0. apply Zabs_nat_lt. lia. }
 exists (makeperiod (Z.abs_nat(nb_edges p)) H0).
 intros.
 unfold tiling_cycle;intros.
