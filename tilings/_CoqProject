@@ -1,3 +1,4 @@
 -R . Tilings
-
-Tilings1D.v
+theories/tilings1D.v
+examples/examples1D.v
+theories/tilings2D.v

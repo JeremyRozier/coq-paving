@@ -21,23 +21,12 @@ all: html
 clean: $(COQMAKEFILE)
 	@$(MAKE) -f $(COQMAKEFILE) $@
 	rm -f $(COQMAKEFILE)
-
-zip: 
-	cp Makefile Makefile_common
-	cp Makefile_up Makefile
-	zip ImpAlg.zip Makefile  README.md _CoqProject `tail -n +2 _CoqProject`
-	cp Makefile_common Makefile
+	find . -name "*.aux" -type f -delete
 
 html: $(COQMAKEFILE) $(VS)
 	rm -fr html
 	@$(MAKE) -f $(COQMAKEFILE) $@
 	cp $(EXTRA_DIR)/resources/* html
-
-irif: html zip
-	cp html/* -r ../persoIrif/ITP/
-	cp ImpAlg.zip ../persoIrif/ITP/
-	rsync -arpvz ../persoIrif/ emiquey@www.irif.fr:public_html/ --exclude '.git'
-
 
 
 
