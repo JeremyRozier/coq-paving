@@ -271,21 +271,29 @@ while having the right hypothesis automatically put in the context. *)
                   end
     end.
 
+Lemma path_fst: forall p x y d, path p x y -> nth p 0 d = x.
+  Proof.
+    intros p x y d P.
+    now inversion P;subst;simpl.
+  Qed.
+
 
   Lemma path_compatible_right:
     forall p n x y, path p x y -> n < Z.abs_nat(nb_edges p) ->
                compatible_right (nth p n x) (nth p (S n) x).
   Proof.
-    intros.
-    (* TODO : J\u00e9r\u00e9my *)
-  Admitted.
-
-
-  Lemma path_fst: forall p x y d, path p x y -> nth p 0 d = x.
-  Proof.
-    intros p x y d P.
-    now inversion P;subst;simpl.
-  Qed.
+    intros p n x y Hpath Hn.
+  induction Hpath; simpl in *.
+  - destruct n.
+    + simpl in Hn. unfold edge in H. apply H.
+  - destruct n.
+      inversion Hn.
+      inversion Hn.
+      destruct n.
+      apply path_fst with (p:=p) (x:=t2) (y:=t3) (d:=t1) in Hpath.
+      rewrite Hpath.
+      unfold edge in H;apply H.
+      Admitted.
 
 
   
@@ -384,10 +392,12 @@ while having the right hypothesis automatically put in the context. *)
                    |C z => nth p (Z.abs_nat(z mod nb_edges p)) x
                    end.
 
+Search (_ <= _ -> _ >= _).
   Lemma geq_ge : forall z k : Z, (z > k)%Z -> (z >= k)%Z.
   Proof.
     lia.
   Qed.
+
 
   Lemma tiling_cycle_tiling : forall x p H, tiling (tiling_cycle x p H).
   Proof.
@@ -418,12 +428,23 @@ while having the right hypothesis automatically put in the context. *)
         1:{
           {apply path_compatible_right with (y:=x);unfold cycle in H.
            apply H.
-           admit.   (* TODO : J\u00e9r\u00e9my *)
+           rewrite ltn_predL.
+           rewrite <- Zabs2Nat.inj_0.
+           Search Z.abs_nat.
+           (*apply Zabs2Nat.inj_lt.*)
+           admit.
+           
+           
           }
         }
+        Search (_.-1.+1).
+        apply prednK.
+        rewrite <- Zabs2Nat.inj_0.
         admit.   (* TODO : J\u00e9r\u00e9my *)
       }
   Admitted.
+
+
   (*apply path_compatible_right with (y:=x).
 1:{
 unfold cycle in H.
@@ -462,7 +483,7 @@ Qed.
     apply Z_mod_plus with (a := z) (b := 1%Z) (c := nb_edges p) in H1.
     rewrite Z.mul_1_l in H1.
     now rewrite H1.
-  Admitted. 
+Qed.
 
 
 

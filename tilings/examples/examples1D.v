@@ -317,36 +317,22 @@ intros.
 apply is_pow_2_nat_equiv.
 exists (Z.to_nat((Z.of_nat(n + s + 1))%Z)).
 rewrite Z2Nat.inj_pow.
-admit.
-Admitted.
-(* 1:{ *)
-(* rewrite Z2Nat.inj_add. *)
-(*   1:{ *)
-(*   now rewrite Nat2Z.id. *)
-(*   } *)
-(*   { lia. } *)
-(*   { *)
-(*   now trivial. *)
-(*   } *)
-(* } *)
-(* { *)
-(* now trivial. *)
-(* } *)
-(* { *)
-(* lia. *)
-(* } *)
-(* Qed. *)
+reflexivity.
+lia.
+lia.
+Qed.
 
 Lemma power_not_le_1_n: forall n s:nat, 
     (2 ^ (Z.of_nat (n + s + 1)) + Z.of_nat n <=? 1)%Z = false.
   (* devrait \u00eatre simple *)
 intros.
-
+apply Z.leb_gt.
+do 2 rewrite Nat2Z.inj_add.
+assert ((0 <= Z.of_nat n + Z.of_nat s + 1)%Z).
+-lia.
+apply Z.log2_lt_cancel.
+apply Z.log2_pow2 in H.
 Admitted.
-
-
-
-
 
 Lemma not_pow_aux:
   forall n s:nat, n>0 -> is_pow_2_nat (Z.to_nat (2 ^ (Z.of_nat (n + s + 1)) + Z.of_nat n)) = false.
