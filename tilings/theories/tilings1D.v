@@ -256,12 +256,24 @@ while having the right hypothesis automatically put in the context. *)
     | nil => -1
     | _ :: xs => Z.succ (nb_edges xs)
     end.
-
+  
+  Lemma geq_ge : forall z k : Z, (z > k)%Z -> (z >= k)%Z.
+  Proof.
+    lia.
+  Qed.
   
   Lemma nb_edges_path_pos: forall p x y, path p x y-> (nb_edges p > 0)%Z.
   Proof.
-  Admitted.
-
+  intros.
+  induction H.
+  now simpl.
+  simpl.
+  Search (Z.succ).
+  apply Zle_gt_succ with (n:=0%Z) (m:=(nb_edges p)).
+  apply Z.ge_le_iff.
+  apply geq_ge in IHpath;apply IHpath.
+  Qed.
+  
   Fixpoint nth (l : seq tile) (n : nat) default: tile :=
     match l with
     | nil => default
@@ -293,6 +305,7 @@ Lemma path_fst: forall p x y d, path p x y -> nth p 0 d = x.
       apply path_fst with (p:=p) (x:=t2) (y:=t3) (d:=t1) in Hpath.
       rewrite Hpath.
       unfold edge in H;apply H.
+      (* TODO : J\u00e9r\u00e9my *)
       Admitted.
 
 
@@ -392,12 +405,6 @@ Lemma path_fst: forall p x y d, path p x y -> nth p 0 d = x.
                    |C z => nth p (Z.abs_nat(z mod nb_edges p)) x
                    end.
 
-Search (_ <= _ -> _ >= _).
-  Lemma geq_ge : forall z k : Z, (z > k)%Z -> (z >= k)%Z.
-  Proof.
-    lia.
-  Qed.
-
 
   Lemma tiling_cycle_tiling : forall x p H, tiling (tiling_cycle x p H).
   Proof.
@@ -443,25 +450,6 @@ Search (_ <= _ -> _ >= _).
         admit.   (* TODO : J\u00e9r\u00e9my *)
       }
   Admitted.
-
-
-  (*apply path_compatible_right with (y:=x).
-1:{
-unfold cycle in H.
-apply H.
-}
-lia.
-}
-rewrite H3.
-apply path_compatible_right with (y:=x).
-1:{
-unfold cycle in H.
-apply H.
-}
-apply mod_bound.
-apply H2.
-Qed.
-   *)
 
   Lemma periodic_cycle_tiling : forall x p H, periodic (tiling_cycle x p H).
   Proof.
