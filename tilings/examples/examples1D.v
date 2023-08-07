@@ -332,6 +332,7 @@ assert ((0 <= Z.of_nat n + Z.of_nat s + 1)%Z).
 -lia.
 apply Z.log2_lt_cancel.
 apply Z.log2_pow2 in H.
+(*TODO*)
 Admitted.
 
 Lemma not_pow_aux:

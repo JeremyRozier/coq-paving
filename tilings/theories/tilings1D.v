@@ -268,7 +268,6 @@ while having the right hypothesis automatically put in the context. *)
   induction H.
   now simpl.
   simpl.
-  Search (Z.succ).
   apply Zle_gt_succ with (n:=0%Z) (m:=(nb_edges p)).
   apply Z.ge_le_iff.
   apply geq_ge in IHpath;apply IHpath.
